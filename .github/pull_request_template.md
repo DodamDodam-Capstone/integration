@@ -10,7 +10,8 @@
 
 ## Jira 작업
 
-<!-- 예: DOD-100. Jira 연동 전이거나 해당 사항이 없으면 "없음"으로 작성합니다. -->
+<!-- 예: SCRUM-123 [INT] 서비스 통합 검증 -->
+<!-- Jira: https://dodamdodam.atlassian.net/browse/SCRUM-123 -->
 
 ## 검증
 
@@ -18,3 +19,5 @@
 - [ ] Docker Compose 설정이 있으면 유효성을 검사했습니다.
 - [ ] integration build를 통과했습니다.
 - [ ] PR 제목이 `⬆️ deps(frontend): 설명` 형식을 따릅니다.
+- [ ] PR 제목과 브랜치에 같은 `SCRUM-번호`가 있습니다.
+- [ ] Integration 작업 PR 제목에 `[INT]`가 있습니다.

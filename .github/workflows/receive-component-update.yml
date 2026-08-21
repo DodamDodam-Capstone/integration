@@ -19,6 +19,7 @@ jobs:
       COMPONENT: ${{ github.event.client_payload.component }}
       SOURCE_REPOSITORY: ${{ github.event.client_payload.repository }}
       SOURCE_SHA: ${{ github.event.client_payload.sha }}
+      JIRA_KEY: ${{ github.event.client_payload.jira_key }}
       SOURCE_RUN_URL: ${{ github.event.client_payload.run_url }}
     steps:
       - name: Create Integration Bot token
@@ -48,17 +49,24 @@ jobs:
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+          if [[ "$JIRA_KEY" =~ ^SCRUM-[0-9]+$ ]]; then
+            echo "jira_key=$JIRA_KEY" >> "$GITHUB_OUTPUT"
+          else
+            echo "jira_key=" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Commit bot branch
         if: steps.update-lock.outputs.changed == 'true'
         env:
           BRANCH: bot/update-${{ github.event.client_payload.component }}
+          VALID_JIRA_KEY: ${{ steps.update-lock.outputs.jira_key }}
         run: |
           git config user.name "DodamDodam Integration Bot"
           git config user.email "integration-bot@users.noreply.github.com"
           git checkout -B "$BRANCH"
           git add components.lock.json
-          git commit -m "⬆️ deps($COMPONENT): update component to ${SOURCE_SHA:0:7}"
+          TITLE="⬆️ deps($COMPONENT): ${VALID_JIRA_KEY:+$VALID_JIRA_KEY }update component to ${SOURCE_SHA:0:7}"
+          git commit -m "$TITLE"
           git push --force origin "HEAD:refs/heads/$BRANCH"
 
       - name: Create or update pull request
@@ -66,14 +74,16 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           BRANCH: bot/update-${{ github.event.client_payload.component }}
+          VALID_JIRA_KEY: ${{ steps.update-lock.outputs.jira_key }}
         run: |
-          TITLE="⬆️ deps($COMPONENT): update component to ${SOURCE_SHA:0:7}"
+          TITLE="⬆️ deps($COMPONENT): ${VALID_JIRA_KEY:+$VALID_JIRA_KEY }update component to ${SOURCE_SHA:0:7}"
           BODY=$(cat <<EOF
           ## Automated component update
 
           - Component: `$COMPONENT`
           - Repository: `$SOURCE_REPOSITORY`
           - Commit: `$SOURCE_SHA`
+          - Jira: `${VALID_JIRA_KEY:-없음}`
           - [Source workflow]($SOURCE_RUN_URL)
 
           This PR must pass Gitmoji title validation and the full integration CI.

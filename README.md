@@ -17,4 +17,4 @@ merge는 다시 integration PR을 생성하지 않습니다.
 
 - [GitHub 협업 및 CI 흐름](docs/GITHUB_WORKFLOW.md)
 - [초기 설정 상태와 추후 검토 사항](docs/SETUP_STATUS.md)
-- [Jira와 GitHub Issue 연동 계획](docs/JIRA_GITHUB_INTEGRATION.md)
+- [Jira와 GitHub Issue 연동 운영 규칙](docs/JIRA_GITHUB_INTEGRATION.md)
