@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Validate GitHub Issue to Jira helper
+        run: python3 .github/scripts/test_sync_github_issue_to_jira.py
       - name: Validate component lock
         id: versions
         run: python3 scripts/component_lock.py validate --github-output
