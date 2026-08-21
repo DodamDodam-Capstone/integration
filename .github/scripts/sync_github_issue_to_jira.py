@@ -15,6 +15,8 @@ JIRA_KEY_RE = re.compile(r"\bSCRUM-\d+\b", re.IGNORECASE)
 PARENT_SECTION_RE = re.compile(
     r"###\s*상위 Jira 키[^\n]*\n+(.*?)(?=\n###|\Z)", re.IGNORECASE | re.DOTALL
 )
+ISSUE_TYPE_IDS = {"에픽": "10001", "작업": "10003", "버그": "10006"}
+LINK_MARKER = "<!-- jira-auto-link -->"
 
 
 def required_env(name: str) -> str:
@@ -144,46 +146,53 @@ def main() -> int:
     if "jira-skip" in labels:
         print("jira-skip 레이블이 있어 건너뜁니다.")
         return 0
-    if JIRA_KEY_RE.search(issue["title"]):
-        print("이미 Jira 키가 있는 Issue이므로 건너뜁니다.")
-        return 0
-
     unique_label = f"github-{repository.split('/')[-1]}-{number}"
     headers = jira_headers(jira_token)
-    jql = f'project = "{project}" AND labels = "{unique_label}" ORDER BY created DESC'
-    query = urllib.parse.urlencode({"jql": jql, "fields": "key", "maxResults": 1})
-    search = request_json("GET", f"{jira_api}/rest/api/3/search/jql?{query}", headers=headers)
-    existing = search.get("issues", [])
-
     kind = issue_type(labels)
     target_prefix = "EPIC" if kind == "에픽" else prefix
-    if existing:
-        jira_key = existing[0]["key"]
+    title_key = JIRA_KEY_RE.search(issue["title"])
+    if title_key:
+        jira_key = title_key.group(0).upper()
     else:
-        fields = {
-            "project": {"key": project},
-            "summary": summary_for(issue["title"], target_prefix),
-            "issuetype": {"name": kind},
-            "description": adf_description(issue, repository),
-            "labels": ["github-sync", unique_label],
-        }
-        parent = extract_parent(issue.get("body") or "")
-        if parent and kind != "에픽":
-            fields["parent"] = {"key": parent}
-        created = request_json("POST", f"{jira_api}/rest/api/3/issue", headers=headers, payload={"fields": fields})
-        jira_key = created["key"]
+        jql = f'project = "{project}" AND labels = "{unique_label}" ORDER BY created DESC'
+        query = urllib.parse.urlencode({"jql": jql, "fields": "key", "maxResults": 1})
+        search = request_json("GET", f"{jira_api}/rest/api/3/search/jql?{query}", headers=headers)
+        existing = search.get("issues", [])
+        if existing:
+            jira_key = existing[0]["key"]
+        else:
+            fields = {
+                "project": {"key": project},
+                "summary": summary_for(issue["title"], target_prefix),
+                "issuetype": {"id": ISSUE_TYPE_IDS[kind]},
+                "description": adf_description(issue, repository),
+                "labels": ["github-sync", unique_label],
+            }
+            parent = extract_parent(issue.get("body") or "")
+            if parent and kind != "에픽":
+                fields["parent"] = {"key": parent}
+            created = request_json("POST", f"{jira_api}/rest/api/3/issue", headers=headers, payload={"fields": fields})
+            jira_key = created["key"]
 
     jira_url = f"{jira_site}/browse/{jira_key}"
     new_title = f"{jira_key} {summary_for(issue['title'], target_prefix)}"
-    request_json("PATCH", f"{gh_api}/issues/{number}", headers=github_headers(github_token), payload={"title": new_title})
-    request_json(
-        "POST",
-        f"{gh_api}/issues/{number}/comments",
-        headers=github_headers(github_token),
-        payload={"body": f"<!-- jira-auto-link -->\nJira 업무가 자동 연결되었습니다: [{jira_key}]({jira_url})\n\n이 키를 branch, commit, PR 제목에 사용하세요."},
+    if issue["title"] != new_title:
+        request_json("PATCH", f"{gh_api}/issues/{number}", headers=github_headers(github_token), payload={"title": new_title})
+
+    comments = request_json(
+        "GET", f"{gh_api}/issues/{number}/comments?per_page=100", headers=github_headers(github_token)
     )
+    if not any(LINK_MARKER in (comment.get("body") or "") for comment in comments):
+        request_json(
+            "POST",
+            f"{gh_api}/issues/{number}/comments",
+            headers=github_headers(github_token),
+            payload={"body": f"{LINK_MARKER}\nJira 업무가 자동 연결되었습니다: [{jira_key}]({jira_url})\n\n이 키를 branch, commit, PR 제목에 사용하세요."},
+        )
     request_json("POST", f"{gh_api}/issues/{number}/labels", headers=github_headers(github_token), payload={"labels": ["jira-linked"]})
-    slack_notify(slack_webhook, ok=True, repository=repository, issue=issue, jira_key=jira_key, jira_url=jira_url)
+    if "jira-notified" not in labels:
+        slack_notify(slack_webhook, ok=True, repository=repository, issue=issue, jira_key=jira_key, jira_url=jira_url)
+        request_json("POST", f"{gh_api}/issues/{number}/labels", headers=github_headers(github_token), payload={"labels": ["jira-notified"]})
     print(f"{repository}#{number} → {jira_key} 연결 완료")
     return 0
 

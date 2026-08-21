@@ -80,6 +80,12 @@ Task·Bug를 기존 Epic 아래에 둘 때 Form의 `상위 Jira 키`에 `SCRUM-6
 고유 레이블(`github-<repo>-<number>`)을 Jira에도 저장하므로 workflow 재실행 시
 중복 Jira 업무를 만들지 않습니다.
 
+저장소가 public이므로 외부 사용자가 Issue만 열어 내부 Jira 업무를 무제한
+생성하지 못하도록 `OWNER`, `MEMBER`, `COLLABORATOR`가 만든 Issue만 자동
+동기화합니다. 외부 Issue는 팀원이 검토한 뒤 `Run workflow`에 번호를 입력해
+수동 승인합니다. Jira 연결 완료는 `jira-linked`, Slack 성공 알림 완료는
+`jira-notified` 레이블로 구분합니다.
+
 자동 동기화에서 GitHub가 원본이며, Jira가 sprint·일정·담당자·상태의 원본입니다.
 생성 이후 Jira 제목/설명의 양방향 자동 덮어쓰기는 하지 않습니다. 이는 사람이
 Jira에서 보완한 계획 정보가 GitHub 수정으로 사라지는 것을 방지합니다.
@@ -96,11 +102,15 @@ Jira에서 보완한 계획 정보가 GitHub 수정으로 사라지는 것을 �
 
 ### 권한과 토큰 운영
 
-- 조직 Secret: `JIRA_API_TOKEN`(public 저장소 전체)
-- Jira API 권한: `read:jira-work`, `write:issue:jira`만 허용
+- 조직 Secret: `JIRA_API_TOKEN`(네 저장소만 선택 허용)
+- Jira API 권한: classic `read:jira-work`, `write:jira-work`만 허용
 - 만료일: `2027-08-21`
 - 만료 전 새 토큰을 만든 뒤 동일 Secret 값을 교체하고 테스트 Issue로 확인합니다.
 - Secret 값은 로그·문서·로컬 파일에 기록하지 않습니다.
+
+Jira 업무 유형 ID는 프로젝트 설정에서 확인한 Epic `10001`, Task `10003`, Bug
+`10006`으로 고정합니다. Jira 표시 언어가 바뀌어도 API 생성이 깨지지 않도록
+번역된 업무 유형 이름을 사용하지 않습니다.
 
 추후 검토할 GitHub 설정은 Organization Project에 `Parent issue`,
 `Sub-issue progress`, `Repository`, `Status` field를 추가하는 것입니다.
