@@ -93,9 +93,9 @@ Slack App은 `DodamDodam GitHub Actions` (`A0BRVD5EF0S`)입니다. 각 공개
   [#12](https://github.com/DodamDodam-Capstone/integration/pull/12). 각 PR을 최신
   integration `main`에 맞춘 후 build, 승인, merge를 완료했습니다.
 - `components.lock.json`에는 컴포넌트의 정확한 merge commit을 기록합니다.
-  현재 frontend `ae0c7520f3b014c0403e2c814d038bddf64b74e0`, backend
-  `818579dad4f91611a8300fc2e792199d309bab3d`, AI
-  `cd9e10e2c145113f15c61a0d4933c32d8f72ffab`입니다.
+  현재 frontend `a7891d2d4ee2049e6c123f1049aa2e04fd635428`, backend
+  `91a11b309940b4efaafef11508e0fe0b86789b13`, AI
+  `a8fb5fd878953a62859df27c3205f3d920cd4ce0`입니다.
 - 컴포넌트 승격은 integration PR을 생성하지만, integration 저장소의 승격은
   자기 자신을 대상으로 하는 PR을 생성하지 않습니다.
 
@@ -146,9 +146,17 @@ Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습�
 완료 자동화 검증은
 [integration #24](https://github.com/DodamDodam-Capstone/integration/pull/24)로
 수행했습니다. `development` 병합 후 `integration#19`가 자동으로 종료되고 Jira
-`SCRUM-5`가 `완료`로 전환되었습니다. Team Board 기본 활성 업무 목록에서도
-SCRUM-5가 제외되어 상태 변경이 반영되었습니다. Epic은 `issuetype != Epic` JQL
-조건으로 자동 완료 대상에서 제외했습니다.
+`SCRUM-5`가 `완료`로 전환되었습니다. 이어
+[frontend #12](https://github.com/DodamDodam-Capstone/frontend/pull/12),
+[backend #11](https://github.com/DodamDodam-Capstone/backend/pull/11),
+[ai #11](https://github.com/DodamDodam-Capstone/ai/pull/11)로 저장소별 workflow도
+검증했습니다. 각 GitHub Task가 자동 종료되고 Jira `SCRUM-2`~`SCRUM-4`가
+`완료`로 전환되었으며 저장소별 Slack 알림도 성공했습니다.
+
+네 sub-issue가 모두 닫힌 후 GitHub `integration#18`과 Jira `SCRUM-1` Epic을
+수동 완료했습니다. Epic은 `issuetype != Epic` JQL 조건으로 자동 완료 대상에서
+제외됩니다. Team Board의 기본 활성 업무 목록은 최종 `0/0 work item`으로
+변경되었습니다.
 
 컴포넌트 승격의 Jira key와 source metadata는 integration Bot PR
 [#22](https://github.com/DodamDodam-Capstone/integration/pull/22),
