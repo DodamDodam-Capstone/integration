@@ -94,6 +94,14 @@ Each repository stores only the Incoming Webhook for its own channel in the
 `SLACK_WEBHOOK_URL` Actions secret. Notifications run from a separate
 `workflow_run` workflow and never check out pull-request code.
 
+Every message identifies the repository, workflow, result, source branch,
+target branch, trigger, pull request, commit, actor, run attempt, duration, and
+links to Actions and the pull request when available. A normal promotion is
+therefore displayed explicitly as `development` -> `main`. If GitHub omits PR
+metadata while rerunning a workflow from an already merged PR, the notification
+workflow resolves the PR from the commit through the GitHub API so that the
+target branch and PR link are not lost.
+
 ## Out of scope for the initial setup
 
 - AWS, ECR, ECS, and production deployment
@@ -103,4 +111,3 @@ Each repository stores only the Incoming Webhook for its own channel in the
 - Actual Docker integration build before Dockerfiles and Compose are added
 
 See [SETUP_STATUS.md](SETUP_STATUS.md) for the review checklist.
-
