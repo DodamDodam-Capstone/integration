@@ -80,12 +80,12 @@ Slack App은 `DodamDodam GitHub Actions` (`A0BRVD5EF0S`)입니다. 각 공개
   통과한 후 squash merge했습니다.
   [frontend #6](https://github.com/DodamDodam-Capstone/frontend/pull/6),
   [backend #5](https://github.com/DodamDodam-Capstone/backend/pull/5),
-  [ai #5](https://github.com/DodamDodam-Capstone/ai/pull/5), and
+  [ai #5](https://github.com/DodamDodam-Capstone/ai/pull/5),
   [integration #5](https://github.com/DodamDodam-Capstone/integration/pull/5).
 - Slack metadata 보완도 같은 보호 흐름으로 승격했습니다.
   [frontend #7](https://github.com/DodamDodam-Capstone/frontend/pull/7),
   [backend #6](https://github.com/DodamDodam-Capstone/backend/pull/6),
-  [ai #6](https://github.com/DodamDodam-Capstone/ai/pull/6), and
+  [ai #6](https://github.com/DodamDodam-Capstone/ai/pull/6),
   [integration #9](https://github.com/DodamDodam-Capstone/integration/pull/9).
 - 세 컴포넌트 승격이 정상적으로 dispatch되어 다음 Bot PR을 생성했습니다.
   [integration #10](https://github.com/DodamDodam-Capstone/integration/pull/10),
@@ -93,11 +93,30 @@ Slack App은 `DodamDodam GitHub Actions` (`A0BRVD5EF0S`)입니다. 각 공개
   [#12](https://github.com/DodamDodam-Capstone/integration/pull/12). 각 PR을 최신
   integration `main`에 맞춘 후 build, 승인, merge를 완료했습니다.
 - `components.lock.json`에는 컴포넌트의 정확한 merge commit을 기록합니다.
-  frontend `8e973e292671b4c30f6ce47a5652bef5b7bfcc5b`, backend
-  `9efc10d73772f7ca7a59ff336916f0f42b33a3e5`, AI
-  `f599be0f03b583947180b445ba28f1d3d62daecd`입니다.
+  현재 frontend `ae0c7520f3b014c0403e2c814d038bddf64b74e0`, backend
+  `818579dad4f91611a8300fc2e792199d309bab3d`, AI
+  `cd9e10e2c145113f15c61a0d4933c32d8f72ffab`입니다.
 - 컴포넌트 승격은 integration PR을 생성하지만, integration 저장소의 승격은
   자기 자신을 대상으로 하는 PR을 생성하지 않습니다.
+
+### 한국어 문서 및 Jira 연동 설계 반영
+
+- 네 저장소의 README, 기여 지침, 보안 정책, PR 템플릿을 한국어 중심으로
+  정리했습니다. 명령어, 파일명, GitHub UI 명칭처럼 번역하면 오히려 모호한
+  기술 식별자는 원문을 유지했습니다.
+- 문서 승격 PR
+  [frontend #8](https://github.com/DodamDodam-Capstone/frontend/pull/8),
+  [backend #7](https://github.com/DodamDodam-Capstone/backend/pull/7),
+  [ai #7](https://github.com/DodamDodam-Capstone/ai/pull/7),
+  [integration #13](https://github.com/DodamDodam-Capstone/integration/pull/13)을
+  필수 CI와 별도 승인 후 squash merge했습니다.
+- 세 컴포넌트의 최종 merge SHA가 integration PR
+  [#14](https://github.com/DodamDodam-Capstone/integration/pull/14),
+  [#15](https://github.com/DodamDodam-Capstone/integration/pull/15),
+  [#16](https://github.com/DodamDodam-Capstone/integration/pull/16)으로 순차
+  반영되었고, 각 PR의 Docker Compose build와 Gitmoji 검사가 통과했습니다.
+- Jira Epic → GitHub 상위 이슈 → 저장소별 하위 이슈 구조와 완료 자동화 방안은
+  [`JIRA_GITHUB_INTEGRATION.md`](JIRA_GITHUB_INTEGRATION.md)에 기록했습니다.
 
 ### 인수인계 기준 상태
 
