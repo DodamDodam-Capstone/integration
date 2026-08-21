@@ -1,0 +1,16 @@
+{
+  "components": {
+    "frontend": {
+      "repository": "DodamDodam-Capstone/frontend",
+      "sha": "5595451e60fe9b55fa1389426627e92721b5f9b6"
+    },
+    "backend": {
+      "repository": "DodamDodam-Capstone/backend",
+      "sha": "f7ed70723ee6e97f12ef39e9bbc95204175b3c48"
+    },
+    "ai": {
+      "repository": "DodamDodam-Capstone/ai",
+      "sha": "04ccbde03b74b43c5503e3b2dfc97fdfa869cc5f"
+    }
+  }
+}

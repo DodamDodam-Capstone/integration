@@ -1,0 +1,81 @@
+name: Integration Sync
+
+on:
+  repository_dispatch:
+    types: [component-main-updated]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-sync-${{ github.event.client_payload.component }}
+  cancel-in-progress: true
+
+jobs:
+  update:
+    name: update-component-lock
+    runs-on: ubuntu-latest
+    env:
+      COMPONENT: ${{ github.event.client_payload.component }}
+      SOURCE_REPOSITORY: ${{ github.event.client_payload.repository }}
+      SOURCE_SHA: ${{ github.event.client_payload.sha }}
+      SOURCE_RUN_URL: ${{ github.event.client_payload.run_url }}
+    steps:
+      - name: Create Integration Bot token
+        id: app-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ secrets.INTEGRATION_APP_ID }}
+          private-key: ${{ secrets.INTEGRATION_APP_PRIVATE_KEY }}
+          owner: DodamDodam-Capstone
+          repositories: integration
+
+      - name: Checkout integration repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Validate event and update component lock
+        run: |
+          python3 scripts/component_lock.py update \
+            --component "$COMPONENT" \
+            --repository "$SOURCE_REPOSITORY" \
+            --sha "$SOURCE_SHA"
+
+      - name: Commit bot branch
+        env:
+          BRANCH: bot/update-${{ github.event.client_payload.component }}
+        run: |
+          git config user.name "DodamDodam Integration Bot"
+          git config user.email "integration-bot@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add components.lock.json
+          git commit -m "⬆️ deps($COMPONENT): update component to ${SOURCE_SHA:0:7}"
+          git push --force origin "HEAD:refs/heads/$BRANCH"
+
+      - name: Create or update pull request
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          BRANCH: bot/update-${{ github.event.client_payload.component }}
+        run: |
+          TITLE="⬆️ deps($COMPONENT): update component to ${SOURCE_SHA:0:7}"
+          BODY=$(cat <<EOF
+          ## Automated component update
+
+          - Component: `$COMPONENT`
+          - Repository: `$SOURCE_REPOSITORY`
+          - Commit: `$SOURCE_SHA`
+          - [Source workflow]($SOURCE_RUN_URL)
+
+          This PR must pass Gitmoji title validation and the full integration CI.
+          EOF
+          )
+          PR_NUMBER=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number')
+          if [[ -z "$PR_NUMBER" ]]; then
+            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$BODY"
+            PR_NUMBER=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number')
+          else
+            gh pr edit "$PR_NUMBER" --title "$TITLE" --body "$BODY"
+          fi
+          gh pr merge "$PR_NUMBER" --auto --squash

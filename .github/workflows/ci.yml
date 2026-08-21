@@ -1,0 +1,65 @@
+name: Integration CI
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+permissions:
+  contents: read
+concurrency:
+  group: integration-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  docker:
+    name: docker-compose-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Validate component lock
+        id: versions
+        run: python3 scripts/component_lock.py validate --github-output
+      - name: Detect Compose configuration
+        id: compose
+        shell: bash
+        run: |
+          for file in compose.yaml compose.yml docker-compose.yaml docker-compose.yml; do
+            if [[ -f "$file" ]]; then
+              echo "file=$file" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+          echo "file=" >> "$GITHUB_OUTPUT"
+      - name: Repository readiness
+        if: steps.compose.outputs.file == ''
+        run: echo "Compose configuration is not initialized yet; integration CI is ready."
+      - name: Checkout frontend component
+        if: steps.compose.outputs.file != ''
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: DodamDodam-Capstone/frontend
+          ref: ${{ steps.versions.outputs.frontend-sha }}
+          path: .components/frontend
+          persist-credentials: false
+      - name: Checkout backend component
+        if: steps.compose.outputs.file != ''
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: DodamDodam-Capstone/backend
+          ref: ${{ steps.versions.outputs.backend-sha }}
+          path: .components/backend
+          persist-credentials: false
+      - name: Checkout AI component
+        if: steps.compose.outputs.file != ''
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: DodamDodam-Capstone/ai
+          ref: ${{ steps.versions.outputs.ai-sha }}
+          path: .components/ai
+          persist-credentials: false
+      - name: Validate Compose configuration
+        if: steps.compose.outputs.file != ''
+        run: docker compose -f "${{ steps.compose.outputs.file }}" config --quiet
+      - name: Build integration images
+        if: steps.compose.outputs.file != ''
+        run: docker compose -f "${{ steps.compose.outputs.file }}" build --pull
