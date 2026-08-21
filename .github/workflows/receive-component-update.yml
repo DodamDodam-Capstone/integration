@@ -37,13 +37,20 @@ jobs:
           fetch-depth: 0
 
       - name: Validate event and update component lock
+        id: update-lock
         run: |
           python3 scripts/component_lock.py update \
             --component "$COMPONENT" \
             --repository "$SOURCE_REPOSITORY" \
             --sha "$SOURCE_SHA"
+          if git diff --quiet -- components.lock.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Commit bot branch
+        if: steps.update-lock.outputs.changed == 'true'
         env:
           BRANCH: bot/update-${{ github.event.client_payload.component }}
         run: |
@@ -55,6 +62,7 @@ jobs:
           git push --force origin "HEAD:refs/heads/$BRANCH"
 
       - name: Create or update pull request
+        if: steps.update-lock.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           BRANCH: bot/update-${{ github.event.client_payload.component }}
@@ -79,3 +87,7 @@ jobs:
             gh pr edit "$PR_NUMBER" --title "$TITLE" --body "$BODY"
           fi
           gh pr merge "$PR_NUMBER" --auto --squash
+
+      - name: No component change
+        if: steps.update-lock.outputs.changed != 'true'
+        run: echo "$COMPONENT already points to $SOURCE_SHA; no pull request is needed."

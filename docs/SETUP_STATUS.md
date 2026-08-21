@@ -61,6 +61,8 @@ its own Incoming Webhook, and each repository stores only its matching URL.
   [#3](https://github.com/DodamDodam-Capstone/integration/pull/3), enabled squash
   auto-merge, passed `docker-compose-build` readiness and Gitmoji checks, waited
   for a human approval, and merged automatically after approval.
+- Re-dispatching a component SHA that is already locked is idempotent: the sync
+  succeeds without creating an empty commit or duplicate pull request.
 - The merged source branch remained present, confirming that automatic branch
   deletion is disabled.
 
