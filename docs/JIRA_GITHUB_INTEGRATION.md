@@ -15,7 +15,8 @@
 - 컴포넌트의 Jira key를 integration Bot PR까지 전달하도록 적용
 - Jira Automation `PR 병합 시 Task 완료` 활성화 및 실제 완료 흐름 검증
 - GitHub Issue Form에서 Jira Epic·Task·Bug 자동 생성 workflow 추가
-- 조직 Actions Secret `JIRA_API_TOKEN`의 classic scope 교체 검증 진행 중
+- 조직 Actions Secret `JIRA_API_TOKEN`을 최소 Jira scope 토큰으로 교체하고
+  기존 토큰 철회 및 종단간 재검증 완료
 
 실제 검증 업무:
 
@@ -26,6 +27,21 @@ SCRUM-1 [EPIC] GitHub·Jira 협업 흐름 검증
 ├─ SCRUM-4 [AI]  GitHub·Jira 연동 및 문서 검증
 └─ SCRUM-5 [INT] GitHub·Jira 연동 및 문서 검증
 ```
+
+Issue Form 자동 생성 재검증:
+
+```text
+SCRUM-6 [EPIC] GitHub Issue 자동 동기화 구축
+├─ SCRUM-11 [FE]  frontend#15
+├─ SCRUM-12 [BE]  backend#14
+├─ SCRUM-13 [AI]  ai#14
+└─ SCRUM-14 [INT] integration#37
+```
+
+각 업무에서 Task 유형, `SCRUM-6` 상위 관계, `github-sync` 고유 레이블,
+GitHub 자동 링크 댓글과 상태 레이블, 저장소별 Slack Source/Target을
+확인했습니다. 같은 Issue를 다시 실행해도 Jira 업무와 댓글을 중복 생성하지
+않습니다.
 
 ## 목표
 
@@ -114,10 +130,13 @@ Jira에서 보완한 계획 정보가 GitHub 수정으로 사라지는 것을 �
 ### 권한과 토큰 운영
 
 - 조직 Secret: `JIRA_API_TOKEN`(네 저장소만 선택 허용)
-- Jira API 권한: classic `read:jira-work`, `write:jira-work`만 허용
+- 토큰 이름: `DodamDodam GitHub Issue Sync v2`
+- Jira API 권한: scoped token의 classic `read:jira-work`,
+  `write:jira-work`만 허용
 - 만료일: `2027-08-21`
 - 만료 전 새 토큰을 만든 뒤 동일 Secret 값을 교체하고 테스트 Issue로 확인합니다.
 - Secret 값은 로그·문서·로컬 파일에 기록하지 않습니다.
+- 새 토큰으로 네 저장소 생성과 재시도를 확인한 뒤 기존 토큰은 철회했습니다.
 
 Jira 업무 유형 ID는 프로젝트 설정에서 확인한 Epic `10001`, Task `10003`, Bug
 `10006`으로 고정합니다. Jira 표시 언어가 바뀌어도 API 생성이 깨지지 않도록
@@ -297,7 +316,7 @@ event 기반 Jira Automation으로 처리합니다.
 4. [완료] PR template과 Jira key 검사 workflow 반영
 5. [완료] `development` merge 시 GitHub Issue 종료 workflow 반영
 6. [완료] frontend/backend/ai/integration 기능 PR과 CI 연결 검증
-7. [검토] Jira Branch/PR Automation으로 업무 상태 자동 전환
+7. [완료] Jira PR merge Automation으로 Task 상태를 `완료`로 전환
 8. [검토] GitHub Organization Project에 sub-issue 관련 field 추가
 9. [검토] 필요할 때 Organization Issue Type에 `Epic` 추가
 
@@ -322,9 +341,11 @@ Team Board Gantt는 Jira의 상위 항목 관계를 읽어 Epic과 Task를 자�
 
 완료 업무가 사라져 보였던 원인은 Team Board Gantt의 `View Settings`에서
 `Show completed tickets`가 꺼져 있었기 때문입니다. 이 옵션을 활성화하고 새로
-고침한 뒤 `SCRUM-1`~`SCRUM-10` 총 10개 업무가 유지되며 완료된 9개 업무가
-`완료` 상태로 표시되는 것을 재검증했습니다. 이 옵션을 끄면 데이터가 삭제되는
-것이 아니라 현재 Gantt View에서만 숨겨집니다.
+고침한 뒤 최초 `SCRUM-1`~`SCRUM-10` 총 10개 업무가 유지되며 완료된 9개 업무가
+`완료` 상태로 표시되는 것을 재검증했습니다. Issue Form 종단간 테스트로
+`SCRUM-11`~`SCRUM-14`를 추가한 뒤에도 Gantt가 `14/14 work items`를 표시해
+완료 9개와 진행 전 5개를 함께 보존하는 것을 확인했습니다. 이 옵션을 끄면
+데이터가 삭제되는 것이 아니라 현재 Gantt View에서만 숨겨집니다.
 
 일정 막대를 사용하려면 다음 항목을 입력합니다.
 
