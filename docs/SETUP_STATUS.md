@@ -10,6 +10,7 @@
 - [x] merge 후 source branch 자동 삭제 비활성화
 - [x] `main`, `development` Ruleset 활성화
 - [x] Organization 관리자 우회를 `Always allow`로 설정
+- [x] Organization 기본 멤버 권한 `Read`, 일반 Issue 삭제 비활성화 확인
 - [x] Gitmoji PR 제목 검사를 필수 검사로 등록
 - [x] 저장소별 quality 검사를 필수 검사로 등록
 - [x] Integration Bot을 정확히 네 저장소에 설치
@@ -152,6 +153,9 @@ GitHub Issue 자동 생성 구축은 Jira `SCRUM-6` Epic 아래 저장소별 `SC
 frontend#15를 반복 실행해 Jira와 댓글이 중복되지 않는 것도 확인했습니다.
 새 토큰 저장 후 기존 토큰을 철회하고 다시 실행해 새 토큰 단독 동작도
 확인했습니다.
+`integration#48`에서는 `jira-skip`을 수동 재실행해 Jira 업무, 링크 댓글,
+연결 레이블을 만들지 않고 성공 종료하는 것을 확인한 뒤 테스트 Issue를
+닫았습니다.
 
 검증에 사용한 기능 PR은
 [frontend #10](https://github.com/DodamDodam-Capstone/frontend/pull/10),
@@ -246,6 +250,9 @@ Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습�
 - [ ] 노출이 의심되면 GitHub App private key와 Slack webhook 회전
 - [ ] 첫 팀원 참가 후 일반 사용자의 direct push 거부 검사
 - [ ] 역할을 지정한 후 Ruleset bypass actor 재검토
+- [ ] 팀원 초대 전 멤버의 저장소 생성, App 설치, 저장소 삭제·이전·공개 범위
+      변경, 보호 branch 이름 변경, Team 생성 권한을 Owner 전용으로 제한할지
+      결정합니다.
 - [ ] 팀원 참가 후 Slack 채널 멤버 검토
 
 ### 2026-08-22 추가 보안 감사
