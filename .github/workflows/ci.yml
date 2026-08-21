@@ -14,13 +14,22 @@ jobs:
   docker:
     name: docker-compose-build
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Validate GitHub Issue to Jira helper
         run: python3 .github/scripts/test_sync_github_issue_to_jira.py
+      - name: Validate Actions to Slack helper
+        run: python3 .github/scripts/test_notify_workflow_run_to_slack.py
+      - name: Validate linked Issue helper
+        run: python3 .github/scripts/test_close_linked_issues.py
       - name: Validate component lock
         id: versions
         run: python3 scripts/component_lock.py validate --github-output
+      - name: Test component lock helper
+        run: python3 scripts/test_component_lock.py
       - name: Detect Compose configuration
         id: compose
         shell: bash
@@ -37,7 +46,7 @@ jobs:
         run: echo "Compose configuration is not initialized yet; integration CI is ready."
       - name: Checkout frontend component
         if: steps.compose.outputs.file != ''
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: DodamDodam-Capstone/frontend
           ref: ${{ steps.versions.outputs.frontend-sha }}
@@ -45,7 +54,7 @@ jobs:
           persist-credentials: false
       - name: Checkout backend component
         if: steps.compose.outputs.file != ''
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: DodamDodam-Capstone/backend
           ref: ${{ steps.versions.outputs.backend-sha }}
@@ -53,7 +62,7 @@ jobs:
           persist-credentials: false
       - name: Checkout AI component
         if: steps.compose.outputs.file != ''
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: DodamDodam-Capstone/ai
           ref: ${{ steps.versions.outputs.ai-sha }}

@@ -42,13 +42,20 @@ def validate(write_outputs: bool) -> None:
     print("components.lock.json is valid")
 
 
-def update(component: str, repository: str, sha: str) -> None:
+def validate_run_url(repository: str, run_url: str) -> None:
+    expected = rf"^https://github\.com/{re.escape(repository)}/actions/runs/[1-9]\d*$"
+    if not re.fullmatch(expected, run_url):
+        raise ValueError("Source workflow URL does not match the component repository")
+
+
+def update(component: str, repository: str, sha: str, run_url: str) -> None:
     if component not in EXPECTED:
         raise ValueError(f"Unsupported component: {component}")
     if repository != EXPECTED[component]:
         raise ValueError(f"Repository does not match component {component}")
     if not SHA_PATTERN.fullmatch(sha):
         raise ValueError("SHA must be 40 lowercase hexadecimal characters")
+    validate_run_url(repository, run_url)
 
     data = load_and_validate()
     data["components"][component]["sha"] = sha
@@ -65,14 +72,14 @@ def main() -> None:
     update_parser.add_argument("--component", required=True)
     update_parser.add_argument("--repository", required=True)
     update_parser.add_argument("--sha", required=True)
+    update_parser.add_argument("--run-url", required=True)
     args = parser.parse_args()
 
     if args.command == "validate":
         validate(args.github_output)
     else:
-        update(args.component, args.repository, args.sha)
+        update(args.component, args.repository, args.sha, args.run_url)
 
 
 if __name__ == "__main__":
     main()
-

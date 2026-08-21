@@ -10,12 +10,12 @@
 - `GitHub for Atlassian` 설치 완료
 - `frontend`, `backend`, `ai`, `integration` 네 저장소만 연결
 - GitHub 백필 상태 `FINISHED`, 권한 상태 `FULL ACCESS` 확인
-- Team Board Gantt에서 Epic과 네 Task의 계층 표시 확인
+- Team Board Gantt에서 Epic과 Task 계층 및 완료 업무 보존 표시 확인
 - 네 저장소에 `jira-issue-key` 및 `close-linked-issues` workflow 추가
 - 컴포넌트의 Jira key를 integration Bot PR까지 전달하도록 적용
 - Jira Automation `PR 병합 시 Task 완료` 활성화 및 실제 완료 흐름 검증
 - GitHub Issue Form에서 Jira Epic·Task·Bug 자동 생성 workflow 추가
-- 조직 Actions Secret `JIRA_API_TOKEN` 등록(2027-08-21 만료)
+- 조직 Actions Secret `JIRA_API_TOKEN`의 classic scope 교체 검증 진행 중
 
 실제 검증 업무:
 
@@ -93,12 +93,23 @@ Jira에서 보완한 계획 정보가 GitHub 수정으로 사라지는 것을 �
 ### 실패와 재시도
 
 - 의도적으로 Jira를 만들지 않을 Issue에는 생성 즉시 `jira-skip`을 붙입니다.
-- 이미 제목에 `SCRUM-<번호>`가 있으면 자동 생성을 건너뜁니다.
+- 이미 같은 GitHub Issue 고유 레이블로 만든 Jira 업무가 있으면 그 업무를
+  재사용합니다. 제목에 Jira 키가 있더라도 해당 고유 레이블과 프로젝트가
+  일치하지 않으면 임의의 기존 업무에 연결하지 않습니다.
 - 실패 알림은 저장소별 Slack Actions 채널에 전송됩니다.
 - Actions의 `GitHub Issue to Jira`에서 `Run workflow`를 선택하고 Issue 번호를
   입력하면 수동 재시도할 수 있습니다.
 - 중앙 실행 코드는 `integration/.github/scripts/sync_github_issue_to_jira.py`이며
-  네 저장소 workflow가 보호된 `integration/main` 버전을 사용합니다.
+  컴포넌트 저장소 workflow는 검증한 integration commit SHA를 사용합니다.
+  따라서 이후 `integration/main`이 바뀌어도 secret을 사용하는 실행 코드가
+  예고 없이 바뀌지 않습니다. 중앙 helper를 수정하면 단위 테스트와 integration
+  CI를 통과시킨 뒤 세 컴포넌트의 고정 SHA를 함께 갱신합니다.
+- 수동 재시도는 `main`에서만 허용하고 Issue 번호는 양의 정수만 받습니다.
+- `epic`, `task`, `bug` 레이블이 충돌하면 임의로 유형을 선택하지 않고 실패
+  알림을 보냅니다.
+- Jira 생성, GitHub 제목 변경, 링크 댓글, Slack 알림 중간에 실패해도 고유 Jira
+  레이블, 댓글 marker, `jira-linked`, `jira-notified`를 기준으로 다음 실행이
+  완료되지 않은 단계만 복구합니다.
 
 ### 권한과 토큰 운영
 
@@ -244,6 +255,9 @@ PR merge to development
 - target이 `development` 또는 허용된 hotfix의 `main`인지 확인
 - 최소 권한인 `issues: write`, `pull-requests: read`만 사용
 - PR code checkout 및 실행 금지
+- PR 템플릿의 HTML 주석과 code block 안에 있는 `Resolves #123` 예시는 무시
+- 연결 번호가 GitHub Pull Request이면 닫지 않고, 열린 같은 저장소 Issue만 완료
+- 검증한 중앙 helper를 변경 불가능한 commit SHA로 checkout
 - Dependabot, Integration Bot, release PR 제외
 
 ## Release Epic 연결
@@ -301,9 +315,16 @@ Team Board Gantt는 Jira의 상위 항목 관계를 읽어 Epic과 Task를 자�
 계층화합니다. 실제 검증에서 `SCRUM-1` 아래 `SCRUM-2`~`SCRUM-5`가
 `1.1`~`1.4`로 표시되었습니다.
 
-첫 Task 완료 후 Team Board의 기본 활성 업무 필터가 5개에서 4개로 변경되는 것을
-확인했습니다. 모든 Task와 Epic 완료 후에는 `0/0 work item`으로 변경되었습니다.
-완료 업무까지 함께 보려면 Team Board filter에서 완료 상태를 포함합니다.
+업무가 완료될 때 Jira Automation은 삭제 작업을 실행하지 않고 상태만 `완료`로
+전환합니다. 2026-08-22 감사에서 흐름 구성이 `Pull request merged` →
+`issuetype != Epic` → `업무 항목을 완료로 전환`뿐임을 확인했고, 최근 감사 로그도
+성공 또는 적용 대상 없음으로 기록되어 있었습니다.
+
+완료 업무가 사라져 보였던 원인은 Team Board Gantt의 `View Settings`에서
+`Show completed tickets`가 꺼져 있었기 때문입니다. 이 옵션을 활성화하고 새로
+고침한 뒤 `SCRUM-1`~`SCRUM-10` 총 10개 업무가 유지되며 완료된 9개 업무가
+`완료` 상태로 표시되는 것을 재검증했습니다. 이 옵션을 끄면 데이터가 삭제되는
+것이 아니라 현재 Gantt View에서만 숨겨집니다.
 
 일정 막대를 사용하려면 다음 항목을 입력합니다.
 

@@ -28,9 +28,10 @@
 | Integration Ruleset | `21153781` |
 
 GitHub App에는 저장소 metadata read, Contents read/write, Pull Requests
-read/write 권한이 있습니다. App webhook은 비활성화되어 있습니다. App ID와
-private key는 저장소 Actions secret으로 저장하며 private key를 commit하지
-않았습니다.
+read/write 권한이 있습니다. App webhook은 비활성화되어 있습니다. 공개 Client
+ID는 workflow에 기록하고 private key만 저장소 Actions secret으로 보관하며
+private key를 commit하지 않았습니다. 생성되는 installation token은 integration
+한 저장소와 현재 단계에 필요한 contents/pull request 권한으로 제한합니다.
 
 ## Slack 설정
 
@@ -133,7 +134,7 @@ Slack App은 `DodamDodam GitHub Actions` (`A0BRVD5EF0S`)입니다. 각 공개
 - [x] 컴포넌트 `main` merge의 Jira 키를 integration Bot PR까지 전달하도록 확장
 - [x] Jira Automation `PR 병합 시 Task 완료` 활성화
 - [x] PR 승인·병합, GitHub Issue 종료, Jira Task 완료, Team Board 반영 검증
-- [x] Jira 최소 권한 API 토큰을 조직 Actions Secret으로 등록
+- [ ] classic `read:jira-work`, `write:jira-work` 토큰으로 조직 Actions Secret 교체
 - [x] 네 저장소 Task·Bug Issue Form과 integration Epic Form 추가
 - [x] GitHub Issue → Jira 생성 → GitHub 링크 기록 → Slack 알림 자동화 추가
 - [ ] 실제 테스트 Issue로 네 저장소 종단간 자동 생성 검증
@@ -165,8 +166,10 @@ Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습�
 
 네 sub-issue가 모두 닫힌 후 GitHub `integration#18`과 Jira `SCRUM-1` Epic을
 수동 완료했습니다. Epic은 `issuetype != Epic` JQL 조건으로 자동 완료 대상에서
-제외됩니다. Team Board의 기본 활성 업무 목록은 최종 `0/0 work item`으로
-변경되었습니다.
+제외됩니다. Team Board의 기본 View는 완료 업무를 숨겨 최종
+`0/0 work item`처럼 보였지만 데이터가 삭제된 것은 아니었습니다.
+`Show completed tickets`를 켠 뒤 새로 고침해 `SCRUM-1`~`SCRUM-10`이 모두
+남아 있고 완료 업무가 `완료` 상태로 표시되는 것을 확인했습니다.
 
 컴포넌트 승격의 Jira key와 source metadata는 integration Bot PR
 [#22](https://github.com/DodamDodam-Capstone/integration/pull/22),
@@ -237,16 +240,13 @@ Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습�
 - [ ] 네 저장소의 secret scanning 및 push protection 활성화
 - [ ] Organization 또는 저장소 정책에서 Action의 전체 SHA 고정 강제
 - [ ] `Allow all actions`를 GitHub 공식 Action과 승인된 Action만 허용하도록 축소
-- [ ] Node.js 20 지원 종료 경고가 발생하는 Action을 검토 후 갱신
+- [x] Node.js 20 Action을 Node.js 24 기반 최신 major와 전체 SHA로 갱신
 - [ ] 팀원 초대 후 개인 계정 기반 `CODEOWNERS` 적용 여부 결정
 
 ## 즉시 검토할 항목
 
-- [ ] 새 Dependabot PR이 생성되면 검토합니다. 초기 PR에는 검토하지 않은 major
-      Action 갱신이 포함되어 있어 인수인계 기준 상태를 위해 종료했습니다.
-      `actions/create-github-app-token` v3와 `actions/checkout` v7을 우선
-      검토합니다. 현재 고정 버전은 성공하지만 GitHub에서 Node.js 20 지원 종료
-      경고를 표시합니다.
+- [ ] 새 Dependabot PR이 생성되면 검토합니다. Dependabot은 `development`를
+      대상으로 하며 Jira 키만 예외이고 CI와 사람 승인은 그대로 필요합니다.
 - [ ] 설정 인수인계 승인 후 휴지통에 남아 있는 복구 가능한 GitHub App
       private key 사본을 영구 삭제합니다. GitHub에는 active key 하나가 남아
       있고 Actions secret에는 정상 credential이 저장되어 있습니다.
