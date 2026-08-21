@@ -2,7 +2,7 @@
   "components": {
     "frontend": {
       "repository": "DodamDodam-Capstone/frontend",
-      "sha": "a7891d2d4ee2049e6c123f1049aa2e04fd635428"
+      "sha": "c8d71b4598a7e99c1dfcf6fd7ee11b22e42ca650"
     },
     "backend": {
       "repository": "DodamDodam-Capstone/backend",
