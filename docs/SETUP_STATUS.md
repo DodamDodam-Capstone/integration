@@ -260,6 +260,9 @@ Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습�
 - [ ] Secret scanning validity checks와 non-provider patterns는 현재 공개 저장소
       요금제/API에서 활성화되지 않아 기본 provider 패턴과 push protection을
       사용합니다. Organization 요금제 변경 시 다시 검토합니다.
+- [ ] Slack 권한 감사 중 표시된 사용하지 않는 Bot OAuth token을 회전하고,
+      필요하면 네 Incoming Webhook을 재발급해 GitHub secret을 교체합니다.
+      현재 앱 권한은 `incoming-webhook` 하나이고 사용자 token 범위는 없습니다.
 - [ ] 팀원 초대 후 개인 계정 기반 `CODEOWNERS` 적용 여부 결정
 
 ## 즉시 검토할 항목
