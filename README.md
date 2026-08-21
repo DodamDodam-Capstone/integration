@@ -1,22 +1,20 @@
 # DodamDodam Integration
 
-Integration control repository for the DodamDodam frontend, backend, and AI
-services.
+DodamDodam frontend, backend, AI 서비스의 통합 상태를 관리하는 저장소입니다.
 
-This repository will track exact component commit SHAs and validate the Docker
-Compose build. It does not copy component source code.
+각 컴포넌트의 정확한 commit SHA를 기록하고 Docker Compose build를
+검증합니다. 컴포넌트 source code를 이 저장소에 복사하지 않습니다.
 
-The initial GitHub Rulesets, repository CI, Integration Bot, and per-repository
-Slack notifications are applied and end-to-end verified. Application runtime
-versions and Docker build definitions remain intentionally deferred until each
-service is initialized.
+GitHub Ruleset, 저장소별 CI, Integration Bot, 저장소별 Slack 알림을 적용하고
+전체 흐름을 검증했습니다. 애플리케이션 runtime 버전과 Docker build 정의는
+각 서비스가 초기화될 때 결정합니다.
 
-Integration changes are also promoted from `development` to `main` through a
-protected, human-approved squash pull request. This repository is the promotion
-target for component SHAs, so its own merge does not create a self-referential
-integration PR.
+Integration 변경도 보호된 `development` → `main` PR에서 사람의 승인을 받은
+후 squash merge합니다. 이 저장소는 컴포넌트 SHA 반영 대상이므로 자체
+merge는 다시 integration PR을 생성하지 않습니다.
 
-Documentation:
+문서:
 
-- [GitHub collaboration and CI workflow](docs/GITHUB_WORKFLOW.md)
-- [Setup status and future review](docs/SETUP_STATUS.md)
+- [GitHub 협업 및 CI 흐름](docs/GITHUB_WORKFLOW.md)
+- [초기 설정 상태와 추후 검토 사항](docs/SETUP_STATUS.md)
+- [Jira와 GitHub Issue 연동 계획](docs/JIRA_GITHUB_INTEGRATION.md)
