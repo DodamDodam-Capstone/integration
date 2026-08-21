@@ -1,23 +1,23 @@
-# Setup Status and Future Review
+# 초기 설정 상태와 추후 검토 사항
 
-Last reviewed: 2026-08-22
+최종 검토일: 2026-08-22
 
-## Initial GitHub setup
+## GitHub 초기 설정
 
-- [x] Initial commits pushed to all four repositories
-- [x] `development` branch created in all repositories
-- [x] Squash merge enabled; merge and rebase merge disabled
-- [x] Automatic head-branch deletion disabled
-- [x] `main` and `development` Rulesets active
-- [x] Organization-admin bypass configured as `Always allow`
-- [x] Gitmoji PR title check registered and required
-- [x] Repository quality check registered and required
-- [x] Integration Bot installed on exactly the four repositories
-- [x] Component main merge creates or updates an integration PR
+- [x] 네 저장소에 초기 commit 반영
+- [x] 모든 저장소에 `development` branch 생성
+- [x] squash merge 활성화, merge commit과 rebase merge 비활성화
+- [x] merge 후 source branch 자동 삭제 비활성화
+- [x] `main`, `development` Ruleset 활성화
+- [x] Organization 관리자 우회를 `Always allow`로 설정
+- [x] Gitmoji PR 제목 검사를 필수 검사로 등록
+- [x] 저장소별 quality 검사를 필수 검사로 등록
+- [x] Integration Bot을 정확히 네 저장소에 설치
+- [x] 컴포넌트 `main` merge 시 integration PR 생성 또는 갱신
 
-### Applied identifiers
+### 적용 식별자
 
-| Item | Value |
+| 항목 | 값 |
 | --- | --- |
 | GitHub App | `DodamDodam Integration Bot` |
 | GitHub App slug | `dodamdodam-integration-bot` |
@@ -27,152 +27,162 @@ Last reviewed: 2026-08-22
 | AI Ruleset | `21153782` |
 | Integration Ruleset | `21153781` |
 
-The GitHub App has repository metadata read plus Contents and Pull Requests
-read/write access. Webhooks are disabled. Its ID and private key are stored as
-repository Actions secrets; no private key is committed.
+GitHub App에는 저장소 metadata read, Contents read/write, Pull Requests
+read/write 권한이 있습니다. App webhook은 비활성화되어 있습니다. App ID와
+private key는 저장소 Actions secret으로 저장하며 private key를 commit하지
+않았습니다.
 
-## Slack setup
+## Slack 설정
 
-- [x] `#frontend-actions` created and connected
-- [x] `#backend-actions` created and connected
-- [x] `#ai-actions` created and connected
-- [x] `#integration-actions` created and connected
-- [x] Success notification tested in all four channels
-- [x] Failure notification tested in `#frontend-actions`
-- [x] `development` -> `main` source, target, PR, commit, actor, attempt, and
-      duration rendered correctly in all four repository channels
-- [x] Merged-PR rerun fallback completed successfully in all four repositories
-- [x] Webhook URLs stored only as GitHub Actions secrets
+- [x] `#frontend-actions` 생성 및 연결
+- [x] `#backend-actions` 생성 및 연결
+- [x] `#ai-actions` 생성 및 연결
+- [x] `#integration-actions` 생성 및 연결
+- [x] 네 채널에서 성공 알림 검증
+- [x] `#frontend-actions`에서 실패 알림 검증
+- [x] 네 채널에서 `development` → `main`, source, target, PR, commit, actor,
+      attempt, duration 표시 검증
+- [x] 네 저장소에서 merge된 PR 재실행 시 fallback 검증
+- [x] Webhook URL을 GitHub Actions secret에만 저장
 
-Slack App: `DodamDodam GitHub Actions` (`A0BRVD5EF0S`). Each public channel has
-its own Incoming Webhook, and each repository stores only its matching URL.
+Slack App은 `DodamDodam GitHub Actions` (`A0BRVD5EF0S`)입니다. 각 공개
+채널은 별도의 Incoming Webhook을 사용하고, 각 저장소에는 자신의 채널과
+일치하는 URL만 저장합니다.
 
-## Verification evidence
+## 검증 결과
 
-- All four readiness CI workflows completed successfully using
-  `workflow_dispatch` before application source was present.
+- 애플리케이션 source가 없는 상태에서 `workflow_dispatch`로 네 readiness CI를
+  실행하고 성공을 확인했습니다.
 - Frontend test PR
-  [#4](https://github.com/DodamDodam-Capstone/frontend/pull/4) failed with the
-  invalid title `docs: validate automation`, and the failure reached
-  `#frontend-actions`.
-- Renaming the PR to `📝 docs: validate automation` passed
-  `gitmoji-conventional-title`; `frontend-quality` also passed.
-- With checks green but no review, GitHub reported `REVIEW_REQUIRED` and blocked
-  normal merge. An organization admin then exercised the configured emergency
-  bypass and squash-merged the setup document.
-- That merge triggered the GitHub App, which created integration PR
-  [#3](https://github.com/DodamDodam-Capstone/integration/pull/3), enabled squash
-  auto-merge, passed `docker-compose-build` readiness and Gitmoji checks, waited
-  for a human approval, and merged automatically after approval.
-- Re-dispatching a component SHA that is already locked is idempotent: the sync
-  succeeds without creating an empty commit or duplicate pull request.
-- The merged source branch remained present, confirming that automatic branch
-  deletion is disabled.
+  [#4](https://github.com/DodamDodam-Capstone/frontend/pull/4)는 잘못된 제목
+  `docs: validate automation`으로 실패했고, 실패 알림이
+  `#frontend-actions`에 도착했습니다.
+- PR 제목을 `📝 docs: validate automation`으로 변경한 후
+  `gitmoji-conventional-title`과 `frontend-quality`가 통과했습니다.
+- 검사가 성공했지만 승인이 없을 때 GitHub가 `REVIEW_REQUIRED`로 일반 merge를
+  차단했습니다. 이후 Organization 관리자가 설정된 긴급 우회를 사용해 설정
+  문서를 squash merge했습니다.
+- 해당 merge가 GitHub App을 실행하여 integration PR
+  [#3](https://github.com/DodamDodam-Capstone/integration/pull/3)을 생성했습니다.
+  squash auto-merge를 활성화하고 `docker-compose-build` readiness 검사와
+  Gitmoji 검사를 통과한 후 사람의 승인을 기다렸다가 자동으로 merge했습니다.
+- 이미 lock된 컴포넌트 SHA를 다시 dispatch해도 빈 commit이나 중복 PR을
+  생성하지 않고 성공하는 멱등성을 확인했습니다.
+- merge된 source branch가 유지되어 자동 branch 삭제가 꺼져 있음을
+  확인했습니다.
 
-### Development promotion and integration verification
+### Development 승격 및 integration 검증
 
-- The first promotion test proved that an approval from the most recent pusher
-  is rejected by `require_last_push_approval`. Those test PRs were closed and
-  recreated with separate pusher and reviewer identities.
-- The initial `development` -> `main` promotions passed required CI, received a
-  distinct Integration Bot approval, and squash-merged:
+- 첫 승격 검사에서 가장 최근 push를 수행한 사용자의 승인이
+  `require_last_push_approval` 규칙으로 거부되는 것을 확인했습니다. 해당 test
+  PR을 닫고 pusher와 reviewer가 다른 PR로 다시 생성했습니다.
+- 초기 `development` → `main` 승격은 필수 CI와 별도 Integration Bot 승인을
+  통과한 후 squash merge했습니다.
   [frontend #6](https://github.com/DodamDodam-Capstone/frontend/pull/6),
   [backend #5](https://github.com/DodamDodam-Capstone/backend/pull/5),
   [ai #5](https://github.com/DodamDodam-Capstone/ai/pull/5), and
   [integration #5](https://github.com/DodamDodam-Capstone/integration/pull/5).
-- The Slack metadata hardening was promoted through the same protected flow:
+- Slack metadata 보완도 같은 보호 흐름으로 승격했습니다.
   [frontend #7](https://github.com/DodamDodam-Capstone/frontend/pull/7),
   [backend #6](https://github.com/DodamDodam-Capstone/backend/pull/6),
   [ai #6](https://github.com/DodamDodam-Capstone/ai/pull/6), and
   [integration #9](https://github.com/DodamDodam-Capstone/integration/pull/9).
-- The three component promotions dispatched successfully and produced Bot PRs
+- 세 컴포넌트 승격이 정상적으로 dispatch되어 다음 Bot PR을 생성했습니다.
   [integration #10](https://github.com/DodamDodam-Capstone/integration/pull/10),
   [#11](https://github.com/DodamDodam-Capstone/integration/pull/11), and
-  [#12](https://github.com/DodamDodam-Capstone/integration/pull/12). Each was
-  updated onto the latest integration `main`, rebuilt, approved, and merged.
-- `components.lock.json` now records the exact component merge commits:
+  [#12](https://github.com/DodamDodam-Capstone/integration/pull/12). 각 PR을 최신
+  integration `main`에 맞춘 후 build, 승인, merge를 완료했습니다.
+- `components.lock.json`에는 컴포넌트의 정확한 merge commit을 기록합니다.
   frontend `8e973e292671b4c30f6ce47a5652bef5b7bfcc5b`, backend
-  `9efc10d73772f7ca7a59ff336916f0f42b33a3e5`, and AI
-  `f599be0f03b583947180b445ba28f1d3d62daecd`.
-- A component promotion creates an integration PR; an integration repository
-  promotion intentionally does not create a self-referential PR.
+  `9efc10d73772f7ca7a59ff336916f0f42b33a3e5`, AI
+  `f599be0f03b583947180b445ba28f1d3d62daecd`입니다.
+- 컴포넌트 승격은 integration PR을 생성하지만, integration 저장소의 승격은
+  자기 자신을 대상으로 하는 PR을 생성하지 않습니다.
 
-### Clean handoff baseline
+### 인수인계 기준 상태
 
-- [x] Initial Dependabot PRs closed without merging major Action upgrades
-- [x] Obsolete setup and promotion test PRs closed
-- [x] Component Bot PRs merged and their temporary branches removed manually
-- [x] Automatic head-branch deletion remains disabled
-- [x] Every repository contains only `main` and `development`
-- [x] Every repository has zero open pull requests
+- [x] 초기 Dependabot major Action 갱신 PR을 merge하지 않고 종료
+- [x] 더 이상 필요하지 않은 설정 및 승격 test PR 종료
+- [x] Component Bot PR merge 후 임시 branch 수동 삭제
+- [x] source branch 자동 삭제 비활성화 유지
+- [x] 모든 저장소에 `main`, `development`만 유지
+- [x] 모든 저장소의 열린 PR 0개 확인
 
-## When each project is initialized
+## 각 프로젝트 초기화 시 확인할 항목
 
 ### Frontend
 
-- [ ] Add `.nvmrc` or `.node-version`
-- [ ] Commit exactly one supported package-manager lockfile
-- [ ] Define `lint`, `typecheck`, `test`, and `build` scripts as applicable
-- [ ] Add a production Dockerfile when integration build work begins
+- [ ] `.nvmrc` 또는 `.node-version` 추가
+- [ ] 지원하는 package manager lockfile 하나만 commit
+- [ ] 필요한 `lint`, `typecheck`, `test`, `build` script 정의
+- [ ] integration build를 시작할 때 운영용 Dockerfile 추가
 
 ### Backend
 
-- [ ] Add `.java-version`
-- [ ] Commit the Gradle or Maven wrapper
-- [ ] Add unit and integration tests
-- [ ] Add health and readiness endpoints
-- [ ] Add a production Dockerfile
+- [ ] `.java-version` 추가
+- [ ] Gradle 또는 Maven wrapper commit
+- [ ] unit test와 integration test 추가
+- [ ] health 및 readiness endpoint 추가
+- [ ] 운영용 Dockerfile 추가
 
 ### AI
 
-- [ ] Add `.python-version`
-- [ ] Choose and commit `uv.lock`, `requirements.txt`, or `pyproject.toml`
-- [ ] Configure Ruff and pytest
-- [ ] Document model and dataset provenance
-- [ ] Keep large model files and datasets out of Git
-- [ ] Add a production Dockerfile
+- [ ] `.python-version` 추가
+- [ ] `uv.lock`, `requirements.txt`, `pyproject.toml` 중 사용할 방식 결정 및 commit
+- [ ] Ruff와 pytest 설정
+- [ ] model 및 dataset 출처 문서화
+- [ ] 큰 model file과 dataset을 Git에서 제외
+- [ ] 운영용 Dockerfile 추가
 
 ### Integration
 
-- [ ] Add Compose configuration using `.components/frontend`,
-      `.components/backend`, and `.components/ai` build contexts
-- [ ] Add service health checks
-- [ ] Add `docker compose up --wait` smoke testing
-- [ ] Add backend-to-AI contract tests
-- [ ] Add frontend-to-backend end-to-end tests
+- [ ] `.components/frontend`, `.components/backend`, `.components/ai` build
+      context를 사용하는 Compose 설정 추가
+- [ ] 서비스 health check 추가
+- [ ] `docker compose up --wait` smoke test 추가
+- [ ] backend와 AI 사이 contract test 추가
+- [ ] frontend와 backend 사이 end-to-end test 추가
 
-## Security and maintenance review
+## 보안 및 유지보수 검토
 
-- [x] Pin external Actions to reviewed full commit SHAs
-- [ ] Review Dependabot Action updates weekly
-- [ ] Enable CodeQL after source languages are present
-- [ ] Add secret scanning or Gitleaks policy review
-- [ ] Rotate GitHub App private key and Slack webhooks if exposure is suspected
-- [ ] Test non-admin direct-push rejection after the first teammate joins
-- [ ] Review Ruleset bypass actors after team roles are created
-- [ ] Review Slack channel membership after teammates join
+- [x] 외부 Action을 검토한 전체 commit SHA로 고정
+- [ ] Dependabot Action 갱신을 매주 검토
+- [ ] source language가 추가된 후 CodeQL 활성화
+- [ ] secret scanning과 push protection 활성화 또는 Gitleaks 정책 검토
+- [ ] 노출이 의심되면 GitHub App private key와 Slack webhook 회전
+- [ ] 첫 팀원 참가 후 일반 사용자의 direct push 거부 검사
+- [ ] 역할을 지정한 후 Ruleset bypass actor 재검토
+- [ ] 팀원 참가 후 Slack 채널 멤버 검토
 
-## Immediate follow-up review
+### 2026-08-22 추가 보안 감사
 
-- [ ] Review newly recreated Dependabot pull requests when they appear. The
-      initialization PRs were closed for a clean handoff because they contained
-      unreviewed major-version Action upgrades. Prioritize
-      `actions/create-github-app-token` v3 and `actions/checkout` v7: current
-      pinned versions run successfully but GitHub emits a Node.js 20
-      deprecation warning.
-- [ ] Permanently remove the recoverable local GitHub App private-key copy from
-      Trash after the setup handoff is accepted. GitHub retains one active key,
-      and the working credential is already stored in Actions secrets.
-- [ ] Decide whether merged feature branches will be removed manually on a
-      sprint cadence; GitHub will intentionally not delete them automatically.
-- [ ] Re-run the invalid-title and non-admin direct-push tests with a regular
-      organization member after invitations are sent.
+- [x] Dependabot vulnerability alert 활성화 확인
+- [ ] 네 저장소의 secret scanning 및 push protection 활성화
+- [ ] Organization 또는 저장소 정책에서 Action의 전체 SHA 고정 강제
+- [ ] `Allow all actions`를 GitHub 공식 Action과 승인된 Action만 허용하도록 축소
+- [ ] Node.js 20 지원 종료 경고가 발생하는 Action을 검토 후 갱신
+- [ ] 팀원 초대 후 개인 계정 기반 `CODEOWNERS` 적용 여부 결정
 
-## Later AWS phase
+## 즉시 검토할 항목
 
-- [ ] Decide staging and production topology
-- [ ] Add GitHub OIDC; do not store long-lived AWS access keys
-- [ ] Add ECR immutable image tags or digests
-- [ ] Promote the same tested image digest to production
-- [ ] Add deployment concurrency and rollback tests
-- [ ] Add CloudWatch and budget alerts
+- [ ] 새 Dependabot PR이 생성되면 검토합니다. 초기 PR에는 검토하지 않은 major
+      Action 갱신이 포함되어 있어 인수인계 기준 상태를 위해 종료했습니다.
+      `actions/create-github-app-token` v3와 `actions/checkout` v7을 우선
+      검토합니다. 현재 고정 버전은 성공하지만 GitHub에서 Node.js 20 지원 종료
+      경고를 표시합니다.
+- [ ] 설정 인수인계 승인 후 휴지통에 남아 있는 복구 가능한 GitHub App
+      private key 사본을 영구 삭제합니다. GitHub에는 active key 하나가 남아
+      있고 Actions secret에는 정상 credential이 저장되어 있습니다.
+- [ ] merge된 feature branch를 sprint 주기로 수동 삭제할지 결정합니다.
+      GitHub의 자동 branch 삭제 기능은 의도적으로 사용하지 않습니다.
+- [ ] 팀원 초대 후 일반 Organization 멤버로 잘못된 제목과 direct push 거부
+      검사를 다시 실행합니다.
+
+## 추후 AWS 단계
+
+- [ ] staging과 production topology 결정
+- [ ] GitHub OIDC 추가, 장기 AWS access key 저장 금지
+- [ ] 변경 불가능한 ECR image tag 또는 digest 적용
+- [ ] 검증한 동일 image digest를 production으로 승격
+- [ ] deployment concurrency 및 rollback test 추가
+- [ ] CloudWatch 및 budget alert 추가
