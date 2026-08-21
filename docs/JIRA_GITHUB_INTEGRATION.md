@@ -11,6 +11,8 @@
 - `frontend`, `backend`, `ai`, `integration` 네 저장소만 연결
 - GitHub 백필 상태 `FINISHED`, 권한 상태 `FULL ACCESS` 확인
 - Team Board Gantt에서 Epic과 네 Task의 계층 표시 확인
+- 네 저장소에 `jira-issue-key` 및 `close-linked-issues` workflow 추가
+- 컴포넌트의 Jira key를 integration Bot PR까지 전달하도록 적용
 
 실제 검증 업무:
 
@@ -128,10 +130,10 @@ hotfix/SCRUM-4-auth-failure
 🐛 fix(auth): SCRUM-3 [BE] refresh token 검증 수정
 ```
 
-현재 Gitmoji 제목 검사는 위 형식을 허용합니다. Jira 연결 후에는 기능 PR에
-정확히 하나의 Jira key가 있는지 검사하는 workflow를 추가합니다. Dependabot,
-Integration Bot, 문서만 수정하는 초기 설정 PR은 명시적인 예외 규칙을
-사용합니다.
+현재 Gitmoji 제목 검사는 위 형식을 허용합니다. `jira-issue-key` workflow는
+기능 PR의 branch와 제목에 정확히 하나의 같은 Jira key가 있는지 검사하며,
+`development` 대상 PR에는 저장소별 `[FE]`, `[BE]`, `[AI]`, `[INT]` 접두어도
+요구합니다. Dependabot과 Integration Bot branch는 명시적으로 예외 처리합니다.
 
 ## 업무 상태 자동화
 
@@ -214,17 +216,17 @@ event 기반 Jira Automation으로 처리합니다.
 
 - [Jira Smart Commits](https://support.atlassian.com/jira-software-cloud/docs/process-issues-with-smart-commits/)
 
-## 적용 순서
+## 적용 및 검증 순서
 
-1. Jira project key와 workflow 상태 확정
-2. `GitHub for Atlassian` 설치 및 네 저장소 연결
-3. GitHub `Epic` Issue Type과 Issue Form 추가
-4. Organization GitHub Project에 sub-issue 관련 field 추가
-5. PR template과 Jira key 검사 workflow 반영
-6. `development` merge 시 GitHub Issue 종료 workflow 반영
-7. Jira Branch/PR Automation 규칙 구성
-8. Epic 하나와 frontend/backend Task로 전체 흐름 검증
-9. 검증 후 AI 및 integration Task로 확대
+1. [완료] Jira project key와 Epic/Task 이름 규칙 확정
+2. [완료] `GitHub for Atlassian` 설치 및 네 저장소 연결
+3. [완료] Jira Epic/Task와 GitHub 상위/하위 Issue 생성
+4. [완료] PR template과 Jira key 검사 workflow 반영
+5. [완료] `development` merge 시 GitHub Issue 종료 workflow 반영
+6. [완료] frontend/backend/ai/integration 기능 PR과 CI 연결 검증
+7. [검토] Jira Branch/PR Automation으로 업무 상태 자동 전환
+8. [검토] GitHub Organization Project에 sub-issue 관련 field 추가
+9. [검토] 필요할 때 Organization Issue Type에 `Epic` 추가
 
 ## 실제 적용에 필요한 정보
 
