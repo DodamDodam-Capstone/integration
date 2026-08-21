@@ -133,6 +133,16 @@ Slack App은 `DodamDodam GitHub Actions` (`A0BRVD5EF0S`)입니다. 각 공개
 - [x] 컴포넌트 `main` merge의 Jira 키를 integration Bot PR까지 전달하도록 확장
 - [x] Jira Automation `PR 병합 시 Task 완료` 활성화
 - [x] PR 승인·병합, GitHub Issue 종료, Jira Task 완료, Team Board 반영 검증
+- [x] Jira 최소 권한 API 토큰을 조직 Actions Secret으로 등록
+- [x] 네 저장소 Task·Bug Issue Form과 integration Epic Form 추가
+- [x] GitHub Issue → Jira 생성 → GitHub 링크 기록 → Slack 알림 자동화 추가
+- [ ] 실제 테스트 Issue로 네 저장소 종단간 자동 생성 검증
+
+GitHub Issue 자동 생성 구축은 Jira `SCRUM-6` Epic 아래 저장소별 `SCRUM-7`
+(Frontend), `SCRUM-8`(Backend), `SCRUM-9`(AI), `SCRUM-10`(Integration) Task로
+추적합니다. 중앙 스크립트는 integration에서 관리하며 네 workflow가 같은
+보호된 `integration/main` 코드를 사용합니다. API 토큰은 2027-08-21 만료 전에
+교체해야 합니다.
 
 검증에 사용한 기능 PR은
 [frontend #10](https://github.com/DodamDodam-Capstone/frontend/pull/10),
