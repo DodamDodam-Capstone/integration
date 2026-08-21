@@ -13,6 +13,7 @@
 - Team Board Gantt에서 Epic과 네 Task의 계층 표시 확인
 - 네 저장소에 `jira-issue-key` 및 `close-linked-issues` workflow 추가
 - 컴포넌트의 Jira key를 integration Bot PR까지 전달하도록 적용
+- Jira Automation `PR 병합 시 Task 완료` 활성화 및 실제 완료 흐름 검증
 
 실제 검증 업무:
 
@@ -143,7 +144,20 @@ hotfix/SCRUM-4-auth-failure
 To Do -> In Progress -> In Review -> Done
 ```
 
-Jira Automation 규칙:
+적용한 Jira Automation 규칙 `PR 병합 시 Task 완료`:
+
+```text
+Pull request merged
+-> JQL: issuetype != Epic
+-> 연결된 Jira 업무 항목을 완료로 전환
+```
+
+실제 [integration #24](https://github.com/DodamDodam-Capstone/integration/pull/24)
+병합으로 GitHub `integration#19`가 닫히고 Jira `SCRUM-5`가 `완료`로 전환되는
+것을 확인했습니다. Epic은 자동 완료하지 않으며 sprint review에서 하위 Task와
+integration 검증을 확인한 후 수동 완료합니다.
+
+추가할 수 있는 Jira Automation 규칙:
 
 1. `Branch created`
    - branch에 Jira key가 있으면 Task를 `In Progress`로 전환합니다.
@@ -151,9 +165,7 @@ Jira Automation 규칙:
    - 연결된 Task를 `In Review`로 전환하고 PR URL을 기록합니다.
 3. `Pull request declined`
    - 다른 열린 PR이 없으면 Task를 `In Progress`로 되돌립니다.
-4. `Pull request merged`
-   - target이 `development`이면 일반 Task를 `Done`으로 전환합니다.
-   - hotfix PR의 target이 `main`이면 해당 Task를 `Done`으로 전환합니다.
+4. `Pull request merged`는 현재 적용된 규칙으로 처리합니다.
 5. Child Task 완료
    - Epic의 모든 child Task가 완료되었고 integration 검증이 끝났을 때만 Epic을
      `Done`으로 전환합니다.
@@ -242,6 +254,10 @@ Team Board Gantt는 Jira의 상위 항목 관계를 읽어 Epic과 Task를 자�
 계층화합니다. 실제 검증에서 `SCRUM-1` 아래 `SCRUM-2`~`SCRUM-5`가
 `1.1`~`1.4`로 표시되었습니다.
 
+SCRUM-5 완료 자동화 실행 후 Team Board의 기본 활성 업무 필터가 5개에서 4개로
+변경되고 완료 Task가 목록에서 제외되는 것도 확인했습니다. 완료 업무까지 함께
+보려면 Team Board filter에서 완료 상태를 포함합니다.
+
 일정 막대를 사용하려면 다음 항목을 입력합니다.
 
 - Jira `시작 날짜`와 `기한`
@@ -264,3 +280,13 @@ Team Board Gantt는 Jira의 상위 항목 관계를 읽어 Epic과 Task를 자�
 
 Organization Owner만 앱의 저장소 접근 범위를 변경합니다. 새 저장소를 만들면
 자동 연결되지 않으며 GitHub App 설정에서 명시적으로 추가해야 합니다.
+
+## PR 승인·병합 정보의 반영 범위
+
+- GitHub Ruleset이 승인 수, 마지막 push와 다른 승인자, 필수 CI를 강제합니다.
+- Jira Development panel은 branch, commit, PR, build와 PR 상태를 표시합니다.
+- PR 상세에는 승인된 사용자 표시가 나타나며, 병합 후 `MERGED`로 변경됩니다.
+- GitHub Issue 완료는 `close-linked-issues` workflow가 담당합니다.
+- Jira Task 완료는 `PR 병합 시 Task 완료` Automation이 담당합니다.
+- Slack은 저장소별 Actions 채널에 source/target branch, PR, commit, actor,
+  결과와 실행 링크를 보냅니다.
