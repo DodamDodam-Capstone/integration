@@ -14,6 +14,8 @@
 - 네 저장소에 `jira-issue-key` 및 `close-linked-issues` workflow 추가
 - 컴포넌트의 Jira key를 integration Bot PR까지 전달하도록 적용
 - Jira Automation `PR 병합 시 Task 완료` 활성화 및 실제 완료 흐름 검증
+- GitHub Issue Form에서 Jira Epic·Task·Bug 자동 생성 workflow 추가
+- 조직 Actions Secret `JIRA_API_TOKEN` 등록(2027-08-21 만료)
 
 실제 검증 업무:
 
@@ -58,18 +60,50 @@ GitHub sub-issue는 같은 Organization 소유자의 다른 저장소 Issue를 �
 - [GitHub Sub-issues REST API](https://docs.github.com/en/rest/issues/sub-issues)
 - [Parent issue와 Sub-issue progress](https://docs.github.com/en/issues/planning-and-tracking-with-projects/understanding-fields/about-parent-issue-and-sub-issue-progress-fields)
 
-## 필요한 GitHub 설정
+## GitHub Issue에서 Jira 자동 생성
 
-현재 Organization Issue Type은 `Task`, `Bug`, `Feature`입니다. 다음 설정을
-추가합니다.
+네 저장소의 `New issue` 화면에 Task·Bug Issue Form을 제공합니다. Epic은 여러
+저장소가 참여하는 목표이므로 `integration`의 `Project Epic` Form에서만
+생성합니다.
 
-1. Organization Issue Type에 `Epic` 추가
-2. `integration` 저장소에 Epic Issue Form 추가
-3. 네 저장소에 Task 및 Bug Issue Form 추가
-4. Issue Form에 Jira key와 Jira URL 필드 추가
-5. PR template에 Jira key와 관련 GitHub Issue 항목 유지
-6. Organization GitHub Project에 `Parent issue`, `Sub-issue progress`,
-   `Repository`, `Status` field 추가
+```text
+GitHub Issue opened
+-> 저장소/레이블로 [FE]·[BE]·[AI]·[INT]·[EPIC]과 업무 유형 결정
+-> Jira SCRUM 업무 생성
+-> GitHub Issue 제목에 Jira 키 추가
+-> Jira 링크 댓글과 jira-linked 레이블 추가
+-> 저장소별 Slack Actions 채널에 Source/Target/Actor/Result 전송
+```
+
+Task·Bug를 기존 Epic 아래에 둘 때 Form의 `상위 Jira 키`에 `SCRUM-6`처럼
+입력합니다. 비워 두면 상위 항목 없는 Jira 업무로 생성됩니다. 한 GitHub Issue의
+고유 레이블(`github-<repo>-<number>`)을 Jira에도 저장하므로 workflow 재실행 시
+중복 Jira 업무를 만들지 않습니다.
+
+자동 동기화에서 GitHub가 원본이며, Jira가 sprint·일정·담당자·상태의 원본입니다.
+생성 이후 Jira 제목/설명의 양방향 자동 덮어쓰기는 하지 않습니다. 이는 사람이
+Jira에서 보완한 계획 정보가 GitHub 수정으로 사라지는 것을 방지합니다.
+
+### 실패와 재시도
+
+- 의도적으로 Jira를 만들지 않을 Issue에는 생성 즉시 `jira-skip`을 붙입니다.
+- 이미 제목에 `SCRUM-<번호>`가 있으면 자동 생성을 건너뜁니다.
+- 실패 알림은 저장소별 Slack Actions 채널에 전송됩니다.
+- Actions의 `GitHub Issue to Jira`에서 `Run workflow`를 선택하고 Issue 번호를
+  입력하면 수동 재시도할 수 있습니다.
+- 중앙 실행 코드는 `integration/.github/scripts/sync_github_issue_to_jira.py`이며
+  네 저장소 workflow가 보호된 `integration/main` 버전을 사용합니다.
+
+### 권한과 토큰 운영
+
+- 조직 Secret: `JIRA_API_TOKEN`(public 저장소 전체)
+- Jira API 권한: `read:jira-work`, `write:issue:jira`만 허용
+- 만료일: `2027-08-21`
+- 만료 전 새 토큰을 만든 뒤 동일 Secret 값을 교체하고 테스트 Issue로 확인합니다.
+- Secret 값은 로그·문서·로컬 파일에 기록하지 않습니다.
+
+추후 검토할 GitHub 설정은 Organization Project에 `Parent issue`,
+`Sub-issue progress`, `Repository`, `Status` field를 추가하는 것입니다.
 
 ## GitHub for Atlassian 연결
 
