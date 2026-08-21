@@ -42,7 +42,6 @@ jobs:
           actor = (run.get("actor") or {}).get("login") or "unknown"
           run_url = run["html_url"]
           pull_requests = run.get("pull_requests") or []
-
           # GitHub omits workflow_run.pull_requests when an already merged PR is rerun.
           # Recover the associated PR from the commit so branch flow stays explicit.
           if trigger == "pull_request" and not pull_requests and head_sha:
@@ -60,6 +59,7 @@ jobs:
                   pr for pr in associated_prs
                   if (pr.get("head") or {}).get("ref") == head_branch
               ] or associated_prs[:1]
+
           source_branch = "—"
           target_branch = head_branch
           pr_number = None
