@@ -77,18 +77,16 @@ jobs:
           VALID_JIRA_KEY: ${{ steps.update-lock.outputs.jira_key }}
         run: |
           TITLE="⬆️ deps($COMPONENT): ${VALID_JIRA_KEY:+$VALID_JIRA_KEY }update component to ${SOURCE_SHA:0:7}"
-          BODY=$(cat <<EOF
-          ## Automated component update
-
-          - Component: `$COMPONENT`
-          - Repository: `$SOURCE_REPOSITORY`
-          - Commit: `$SOURCE_SHA`
-          - Jira: `${VALID_JIRA_KEY:-없음}`
-          - [Source workflow]($SOURCE_RUN_URL)
-
-          This PR must pass Gitmoji title validation and the full integration CI.
-          EOF
-          )
+          BODY=$(printf '%s\n' \
+            '## 자동 컴포넌트 업데이트' \
+            '' \
+            "- 컴포넌트: $COMPONENT" \
+            "- 저장소: $SOURCE_REPOSITORY" \
+            "- 커밋: $SOURCE_SHA" \
+            "- Jira: ${VALID_JIRA_KEY:-없음}" \
+            "- 소스 workflow: $SOURCE_RUN_URL" \
+            '' \
+            'Gitmoji 제목 검사와 전체 integration CI를 통과해야 병합할 수 있습니다.')
           PR_NUMBER=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number')
           if [[ -z "$PR_NUMBER" ]]; then
             gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$BODY"
