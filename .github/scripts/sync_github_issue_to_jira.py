@@ -30,7 +30,13 @@ def request_json(method: str, url: str, *, headers: dict[str, str], payload=None
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
             raw = response.read()
-            return json.loads(raw) if raw else {}
+            if not raw:
+                return {}
+            try:
+                return json.loads(raw)
+            except json.JSONDecodeError:
+                # Slack Incoming Webhook은 성공 시 JSON 대신 plain text "ok"를 반환한다.
+                return {"raw": raw.decode(errors="replace")}
     except urllib.error.HTTPError as error:
         detail = error.read().decode(errors="replace")[:1000]
         raise RuntimeError(f"{method} {url} 실패 ({error.code}): {detail}") from error
