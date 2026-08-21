@@ -116,7 +116,9 @@ its own Incoming Webhook, and each repository stores only its matching URL.
 
 - [ ] Review the Dependabot pull requests opened during initialization. They
       include major-version Action updates and must not be merged without
-      checking release notes and immutable replacement SHAs.
+      checking release notes and immutable replacement SHAs. Prioritize
+      `actions/create-github-app-token` v3: the current pinned v2 run succeeds
+      but GitHub emits a Node.js 20 deprecation warning.
 - [ ] Permanently remove the recoverable local GitHub App private-key copy from
       Trash after the setup handoff is accepted. GitHub retains one active key,
       and the working credential is already stored in Actions secrets.
