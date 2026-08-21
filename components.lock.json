@@ -6,11 +6,11 @@
     },
     "backend": {
       "repository": "DodamDodam-Capstone/backend",
-      "sha": "818579dad4f91611a8300fc2e792199d309bab3d"
+      "sha": "91a11b309940b4efaafef11508e0fe0b86789b13"
     },
     "ai": {
       "repository": "DodamDodam-Capstone/ai",
-      "sha": "cd9e10e2c145113f15c61a0d4933c32d8f72ffab"
+      "sha": "a8fb5fd878953a62859df27c3205f3d920cd4ce0"
     }
   }
 }
