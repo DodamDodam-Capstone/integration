@@ -2,11 +2,11 @@
   "components": {
     "frontend": {
       "repository": "DodamDodam-Capstone/frontend",
-      "sha": "8e973e292671b4c30f6ce47a5652bef5b7bfcc5b"
+      "sha": "ae0c7520f3b014c0403e2c814d038bddf64b74e0"
     },
     "backend": {
       "repository": "DodamDodam-Capstone/backend",
-      "sha": "9efc10d73772f7ca7a59ff336916f0f42b33a3e5"
+      "sha": "818579dad4f91611a8300fc2e792199d309bab3d"
     },
     "ai": {
       "repository": "DodamDodam-Capstone/ai",
