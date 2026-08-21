@@ -99,7 +99,7 @@ Slack App은 `DodamDodam GitHub Actions` (`A0BRVD5EF0S`)입니다. 각 공개
 - 컴포넌트 승격은 integration PR을 생성하지만, integration 저장소의 승격은
   자기 자신을 대상으로 하는 PR을 생성하지 않습니다.
 
-### 한국어 문서 및 Jira 연동 설계 반영
+### 한국어 문서 및 Jira 연동 반영
 
 - 네 저장소의 README, 기여 지침, 보안 정책, PR 템플릿을 한국어 중심으로
   정리했습니다. 명령어, 파일명, GitHub UI 명칭처럼 번역하면 오히려 모호한
@@ -115,8 +115,30 @@ Slack App은 `DodamDodam GitHub Actions` (`A0BRVD5EF0S`)입니다. 각 공개
   [#15](https://github.com/DodamDodam-Capstone/integration/pull/15),
   [#16](https://github.com/DodamDodam-Capstone/integration/pull/16)으로 순차
   반영되었고, 각 PR의 Docker Compose build와 Gitmoji 검사가 통과했습니다.
-- Jira Epic → GitHub 상위 이슈 → 저장소별 하위 이슈 구조와 완료 자동화 방안은
+- Jira Epic → GitHub 상위 이슈 → 저장소별 하위 이슈 구조와 완료 자동화 규칙은
   [`JIRA_GITHUB_INTEGRATION.md`](JIRA_GITHUB_INTEGRATION.md)에 기록했습니다.
+
+### Jira·GitHub 실제 연결 및 검증
+
+- [x] Jira `SCRUM` 프로젝트에 공식 `GitHub for Atlassian` App 설치
+- [x] `DodamDodam-Capstone`의 네 저장소만 선택하여 연결
+- [x] repository backfill `FINISHED`, permissions `FULL ACCESS` 확인
+- [x] `SCRUM-1` Epic과 저장소별 `SCRUM-2`~`SCRUM-5` Task 생성 및 상위 관계 연결
+- [x] GitHub `integration#18` 상위 이슈와 네 저장소 하위 이슈 연결
+- [x] Team Board Gantt에서 Epic 아래 네 Task가 `1.1`~`1.4`로 표시되는 것 확인
+- [x] 기능 branch, commit, PR, CI build가 Jira Development panel에 연결되는 것 확인
+- [x] 네 저장소에 Jira 키와 저장소 접두어를 검사하는 `jira-issue-key` 추가
+- [x] `development` merge 시 PR 본문의 같은 저장소 이슈를 닫는 workflow 추가
+- [x] 컴포넌트 `main` merge의 Jira 키를 integration Bot PR까지 전달하도록 확장
+
+검증에 사용한 기능 PR은
+[frontend #10](https://github.com/DodamDodam-Capstone/frontend/pull/10),
+[backend #9](https://github.com/DodamDodam-Capstone/backend/pull/9),
+[ai #9](https://github.com/DodamDodam-Capstone/ai/pull/9),
+[integration #20](https://github.com/DodamDodam-Capstone/integration/pull/20)입니다.
+Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습니다. PR 검토
+승인은 GitHub의 보호 규칙에서 판정하고, Jira는 PR의 생성·merge 상태를 추적하는
+역할로 구분합니다.
 
 ### 인수인계 기준 상태
 
