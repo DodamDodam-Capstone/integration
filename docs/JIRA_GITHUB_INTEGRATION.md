@@ -154,8 +154,11 @@ Pull request merged
 
 실제 [integration #24](https://github.com/DodamDodam-Capstone/integration/pull/24)
 병합으로 GitHub `integration#19`가 닫히고 Jira `SCRUM-5`가 `완료`로 전환되는
-것을 확인했습니다. Epic은 자동 완료하지 않으며 sprint review에서 하위 Task와
-integration 검증을 확인한 후 수동 완료합니다.
+것을 확인했습니다. 같은 검증을 frontend #12, backend #11, AI #11에서 반복해
+네 저장소의 GitHub Issue 종료와 Jira Task 완료가 모두 동작함을 확인했습니다.
+Epic은 자동 완료하지 않으며, 네 GitHub sub-issue와 Jira Task가 모두 완료된 뒤
+sprint review 절차로 GitHub `integration#18`과 Jira `SCRUM-1`을 수동
+완료했습니다.
 
 추가할 수 있는 Jira Automation 규칙:
 
@@ -254,9 +257,9 @@ Team Board Gantt는 Jira의 상위 항목 관계를 읽어 Epic과 Task를 자�
 계층화합니다. 실제 검증에서 `SCRUM-1` 아래 `SCRUM-2`~`SCRUM-5`가
 `1.1`~`1.4`로 표시되었습니다.
 
-SCRUM-5 완료 자동화 실행 후 Team Board의 기본 활성 업무 필터가 5개에서 4개로
-변경되고 완료 Task가 목록에서 제외되는 것도 확인했습니다. 완료 업무까지 함께
-보려면 Team Board filter에서 완료 상태를 포함합니다.
+첫 Task 완료 후 Team Board의 기본 활성 업무 필터가 5개에서 4개로 변경되는 것을
+확인했습니다. 모든 Task와 Epic 완료 후에는 `0/0 work item`으로 변경되었습니다.
+완료 업무까지 함께 보려면 Team Board filter에서 완료 상태를 포함합니다.
 
 일정 막대를 사용하려면 다음 항목을 입력합니다.
 
