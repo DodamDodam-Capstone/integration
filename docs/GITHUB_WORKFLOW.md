@@ -41,6 +41,13 @@ Dependabot의 GitHub Actions 갱신 PR도 `main`이 아니라 `development`를 �
 생성합니다. Bot PR은 Jira 키만 예외이며 Gitmoji, 저장소별 CI, 사람 승인 규칙은
 동일하게 적용합니다.
 
+2026-08-22 초기 승격에서 두 보호 branch에 동일 변경을 각각 squash하여 공통
+계보가 끊긴 상태를 발견했습니다. 기존 commit을 삭제하는 force push는 사용하지
+않고, Organization 관리자가 최신 `main`을 `development`에 한 번 merge하여
+두 parent의 기록을 모두 보존했습니다. `components.lock.json`은 최신 `main` 값을
+선택했고 보완 코드는 검증된 `development` 값을 유지했습니다. 이후 승격은
+반드시 `development` → `main` PR 한 번으로 수행하여 이 예외를 반복하지 않습니다.
+
 ## PR 제목
 
 형식:

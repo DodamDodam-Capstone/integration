@@ -181,6 +181,9 @@ Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습�
 
 ### 인수인계 기준 상태
 
+- [x] 초기 독립 squash로 끊긴 main/development 계보를 force push 없이 1회성
+      main → development merge commit으로 보존·정렬
+
 - [x] 초기 Dependabot major Action 갱신 PR을 merge하지 않고 종료
 - [x] 더 이상 필요하지 않은 설정 및 승격 test PR 종료
 - [x] Component Bot PR merge 후 임시 branch 수동 삭제

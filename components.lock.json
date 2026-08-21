@@ -2,15 +2,15 @@
   "components": {
     "frontend": {
       "repository": "DodamDodam-Capstone/frontend",
-      "sha": "a7891d2d4ee2049e6c123f1049aa2e04fd635428"
+      "sha": "c8d71b4598a7e99c1dfcf6fd7ee11b22e42ca650"
     },
     "backend": {
       "repository": "DodamDodam-Capstone/backend",
-      "sha": "91a11b309940b4efaafef11508e0fe0b86789b13"
+      "sha": "1d7a423a1876950fcd2d3dad1da2936f101f9613"
     },
     "ai": {
       "repository": "DodamDodam-Capstone/ai",
-      "sha": "a8fb5fd878953a62859df27c3205f3d920cd4ce0"
+      "sha": "7f54bdb7bdb99766f1ec140fa51deda2fadd2d3c"
     }
   }
 }
