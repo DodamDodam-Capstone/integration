@@ -128,8 +128,11 @@ Slack App은 `DodamDodam GitHub Actions` (`A0BRVD5EF0S`)입니다. 각 공개
 - [x] Team Board Gantt에서 Epic 아래 네 Task가 `1.1`~`1.4`로 표시되는 것 확인
 - [x] 기능 branch, commit, PR, CI build가 Jira Development panel에 연결되는 것 확인
 - [x] 네 저장소에 Jira 키와 저장소 접두어를 검사하는 `jira-issue-key` 추가
+- [x] 네 Ruleset의 필수 status check에 `jira-issue-key` 등록
 - [x] `development` merge 시 PR 본문의 같은 저장소 이슈를 닫는 workflow 추가
 - [x] 컴포넌트 `main` merge의 Jira 키를 integration Bot PR까지 전달하도록 확장
+- [x] Jira Automation `PR 병합 시 Task 완료` 활성화
+- [x] PR 승인·병합, GitHub Issue 종료, Jira Task 완료, Team Board 반영 검증
 
 검증에 사용한 기능 PR은
 [frontend #10](https://github.com/DodamDodam-Capstone/frontend/pull/10),
@@ -137,8 +140,23 @@ Slack App은 `DodamDodam GitHub Actions` (`A0BRVD5EF0S`)입니다. 각 공개
 [ai #9](https://github.com/DodamDodam-Capstone/ai/pull/9),
 [integration #20](https://github.com/DodamDodam-Capstone/integration/pull/20)입니다.
 Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습니다. PR 검토
-승인은 GitHub의 보호 규칙에서 판정하고, Jira는 PR의 생성·merge 상태를 추적하는
-역할로 구분합니다.
+승인은 GitHub의 보호 규칙에서 판정하며, Jira 개발 상세에도 승인된 사용자와
+`MERGED` 상태가 표시되는 것을 확인했습니다.
+
+완료 자동화 검증은
+[integration #24](https://github.com/DodamDodam-Capstone/integration/pull/24)로
+수행했습니다. `development` 병합 후 `integration#19`가 자동으로 종료되고 Jira
+`SCRUM-5`가 `완료`로 전환되었습니다. Team Board 기본 활성 업무 목록에서도
+SCRUM-5가 제외되어 상태 변경이 반영되었습니다. Epic은 `issuetype != Epic` JQL
+조건으로 자동 완료 대상에서 제외했습니다.
+
+컴포넌트 승격의 Jira key와 source metadata는 integration Bot PR
+[#22](https://github.com/DodamDodam-Capstone/integration/pull/22),
+[#23](https://github.com/DodamDodam-Capstone/integration/pull/23),
+[#26](https://github.com/DodamDodam-Capstone/integration/pull/26)에서 확인했습니다.
+각 본문에는 컴포넌트, 저장소, 정확한 main SHA, `SCRUM-1`, source workflow URL이
+표시되며 Docker Compose, Gitmoji, Jira key 검사를 통과한 뒤 사람 승인으로
+순차 자동 병합되었습니다.
 
 ### 인수인계 기준 상태
 
