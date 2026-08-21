@@ -15,7 +15,7 @@ jobs:
     name: docker-compose-build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Validate component lock
         id: versions
         run: python3 scripts/component_lock.py validate --github-output
@@ -35,7 +35,7 @@ jobs:
         run: echo "Compose configuration is not initialized yet; integration CI is ready."
       - name: Checkout frontend component
         if: steps.compose.outputs.file != ''
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: DodamDodam-Capstone/frontend
           ref: ${{ steps.versions.outputs.frontend-sha }}
@@ -43,7 +43,7 @@ jobs:
           persist-credentials: false
       - name: Checkout backend component
         if: steps.compose.outputs.file != ''
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: DodamDodam-Capstone/backend
           ref: ${{ steps.versions.outputs.backend-sha }}
@@ -51,7 +51,7 @@ jobs:
           persist-credentials: false
       - name: Checkout AI component
         if: steps.compose.outputs.file != ''
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: DodamDodam-Capstone/ai
           ref: ${{ steps.versions.outputs.ai-sha }}
