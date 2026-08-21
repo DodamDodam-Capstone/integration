@@ -1,0 +1,31 @@
+name: "🎯 Project Epic"
+description: "여러 저장소가 참여하는 사용자 가치·목표를 등록합니다. Jira Epic이 자동 생성됩니다."
+title: "[EPIC] "
+labels: ["epic"]
+body:
+  - type: markdown
+    attributes:
+      value: "Epic은 integration에서만 생성합니다. 생성된 Jira Epic 아래에 저장소별 Task를 연결하세요."
+  - type: textarea
+    id: outcome
+    attributes:
+      label: "달성할 결과"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: "저장소별 범위"
+      value: |
+        - [ ] Frontend
+        - [ ] Backend
+        - [ ] AI
+        - [ ] Integration
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: "Epic 완료 조건"
+    validations:
+      required: true

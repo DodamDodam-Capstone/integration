@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "통합 협업 규칙"
+    url: "https://github.com/DodamDodam-Capstone/integration/blob/main/docs/JIRA_GITHUB_INTEGRATION.md"
+    about: "Epic·Task·GitHub Issue·Jira 연결 구조를 확인하세요."
