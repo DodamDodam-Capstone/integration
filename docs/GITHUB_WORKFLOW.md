@@ -37,6 +37,10 @@ PR head 이후 `development`에 새 commit이 없는지, 승격할 파일 변경
 방지합니다. 다른 변경이 `development`에 반영 중일 때는 정렬 작업을 하면 안
 됩니다.
 
+Dependabot의 GitHub Actions 갱신 PR도 `main`이 아니라 `development`를 대상으로
+생성합니다. Bot PR은 Jira 키만 예외이며 Gitmoji, 저장소별 CI, 사람 승인 규칙은
+동일하게 적용합니다.
+
 ## PR 제목
 
 형식:
@@ -76,6 +80,11 @@ Gitmoji와 type을 의미상 고정해 연결하지 않습니다. 허용하는 t
 열려 있으면 기존 Bot branch를 재사용하고 squash auto-merge를 활성화합니다.
 단, 필수 검사와 사람의 승인을 통과하기 전에는 merge되지 않습니다.
 
+수신 workflow는 component, repository, 전체 SHA, source workflow URL 형식을
+검증하며, 이벤트 SHA가 해당 저장소의 현재 `main`과 다르면 오래된 이벤트로
+판단해 PR을 만들지 않습니다. Integration Bot secret이 없으면 성공으로
+건너뛰지 않고 workflow를 실패시켜 설정 손상을 Slack에 드러냅니다.
+
 ## 개발 환경 버전
 
 Runtime 버전은 각 프로젝트가 직접 관리합니다.
@@ -101,6 +110,8 @@ build wrapper가 없으면 CI가 필요한 조치를 포함한 오류 메시지�
 각 저장소는 자신의 채널에 해당하는 Incoming Webhook만
 `SLACK_WEBHOOK_URL` Actions secret에 저장합니다. 알림은 별도의
 `workflow_run` workflow에서 실행하며 PR code를 checkout하지 않습니다.
+알림 helper는 보호된 integration 코드의 검증한 commit SHA로 고정하고
+checkout credential을 남기지 않습니다.
 
 모든 메시지는 저장소, workflow, 결과, source branch, target branch, trigger,
 PR, commit, actor, 실행 시도 횟수, 소요 시간, Actions 및 PR 링크를
@@ -108,6 +119,18 @@ PR, commit, actor, 실행 시도 횟수, 소요 시간, Actions 및 PR 링크를
 이미 merge된 PR의 workflow를 다시 실행해 GitHub event에서 PR 정보가 빠지는
 경우에는 GitHub API로 commit에 연결된 PR을 조회하여 target branch와 PR
 링크를 복구합니다.
+
+Slack webhook은 `hooks.slack.com` HTTPS 주소만 허용하고 일시 오류에는 제한된
+재시도를 수행합니다. 사용자 입력이 될 수 있는 branch·actor 텍스트는 Slack
+markup을 escape하며, 응답이 HTTP 200과 plain text `ok`일 때만 성공으로
+처리합니다. CI, PR 제목, Jira 키, Issue 완료, Component/Integration Sync를
+알리고 GitHub Issue→Jira는 생성 결과를 별도 상세 메시지로 알립니다.
+
+외부 GitHub Action은 변경 불가능한 전체 commit SHA로 고정하며 현재
+`actions/checkout` v7, `setup-node` v7, `setup-java` v5,
+`setup-python` v7, `create-github-app-token` v3처럼 Node.js 24 기반 버전을
+사용합니다. Integration Bot은 공개 Client ID와 private key만 사용하고 토큰
+권한을 해당 작업의 contents/pull request 범위로 제한합니다.
 
 ## 초기 설정 범위에서 제외한 항목
 
