@@ -30,6 +30,15 @@ Force pushes and deletion are blocked only for these two protected branches.
 Other branches may be deleted manually, but are not deleted automatically after
 merge.
 
+Because `development` is long-lived while GitHub squash-merges its promotion,
+the release administrator must realign `development` to the resulting `main`
+commit after every successful promotion. First verify that no commits were
+added to `development` after the PR head and that all promoted file changes are
+present on `main`; then update `development` to that exact commit. This prevents
+repeat conflicts without introducing merge commits into a linear-history
+branch. Never realign the branch while another change is landing on
+`development`.
+
 ## Pull request titles
 
 Use:
