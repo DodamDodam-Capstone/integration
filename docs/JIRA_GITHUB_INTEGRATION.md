@@ -1,6 +1,6 @@
 # Jira와 GitHub Issue 연동 운영 규칙
 
-최종 검토일: 2026-08-22
+최종 검토일: 2026-08-24
 
 ## 적용 상태
 
@@ -144,6 +144,57 @@ Jira 업무 유형 ID는 프로젝트 설정에서 확인한 Epic `10001`, Task 
 
 추후 검토할 GitHub 설정은 Organization Project에 `Parent issue`,
 `Sub-issue progress`, `Repository`, `Status` field를 추가하는 것입니다.
+
+## 팀과 권한 구조
+
+팀원 초대 전에는 빈 팀을 저장소 개수에 맞춰 미리 만들지 않습니다. 실제 담당과
+중복 역할을 확인한 뒤 팀원을 먼저 Organization 및 Jira에 초대하고 다음 최소
+구조를 적용합니다.
+
+### GitHub Teams
+
+| 팀 | 기본 저장소 권한 | 용도 |
+| --- | --- | --- |
+| `frontend` | frontend `Write` | Frontend 개발과 리뷰 |
+| `backend` | backend `Write` | Backend 개발과 리뷰 |
+| `ai` | ai `Write` | AI 개발과 리뷰 |
+| `integration-maintainers` | integration `Write` | 통합 설정과 Docker 검증 |
+| `maintainers` | 네 저장소 `Maintain` | 신뢰할 수 있는 2명 이상이 생길 때만 생성 |
+
+저장소가 public이어도 공개되는 것은 읽기 권한뿐입니다. 쓰기 권한, 팀 mention,
+CODEOWNERS와 팀 리뷰 배정에는 GitHub Teams가 유용합니다. 팀은 visible로 만들고,
+각 도메인 팀에 대응 저장소만 직접 부여합니다. 현재 규모에서는 parent/child
+GitHub Team을 만들지 않습니다. child team이 parent의 저장소 권한을 상속하므로
+소규모 조직에서는 의도하지 않은 권한 확대가 발생하기 쉽습니다.
+
+팀원이 한 명뿐인 팀에는 자동 리뷰 배정을 켜지 않습니다. 두 명 이상일 때
+CODEOWNERS를 추가하고 load-balance 방식으로 한 명을 자동 요청합니다. Owner와
+Admin은 비상 설정을 담당할 1~2명으로 제한하고 일반 개발자는 `Write`, 릴리스
+관리자는 필요한 경우에만 `Maintain`을 사용합니다. 브랜치 Ruleset이
+`main`·`development` 직접 push를 별도로 차단하므로 `Write` 부여가 보호 브랜치
+우회를 의미하지 않습니다.
+
+### Jira/Atlassian Teams
+
+권장 구조는 parent `DodamDodam Capstone` 아래 `Frontend`, `Backend`, `AI`
+subteam입니다. `Integration/Platform`은 전담 인원이 2명 이상 생겼을 때만
+추가합니다. Jira Team은 업무의 책임 그룹을 표현하는 용도이며 보안 권한 경계가
+아닙니다. Jira 접근 권한은 Atlassian Group과 Jira project role로 별도
+관리하고, 일반 팀은 invite-only 또는 closed로 운영합니다.
+
+Jira Team을 만들기만 해서는 업무가 자동 배정되지 않습니다. 실제 적용할 때는
+다음 순서를 지킵니다.
+
+1. SCRUM 화면에 `Team` field를 추가합니다.
+2. 저장소와 Jira Team ID의 매핑을 GitHub Issue 동기화 workflow에 추가합니다.
+3. 기존 SCRUM 업무의 Team 값을 모두 보정합니다.
+4. 그 뒤에 Team별 Board·Gantt filter를 적용합니다.
+
+`Assignee`는 실제 담당 개인, `Team`은 책임 그룹으로 사용합니다. 기존
+`[FE]`·`[BE]`·`[AI]`·`[INT]` 제목 접두사는 Slack과 검색 식별을 위해 그대로
+유지합니다. 기존 업무를 보정하기 전에 Team filter를 켜면 Team 값이 빈 업무가
+Gantt에서 사라진 것처럼 보일 수 있습니다. 팀 구조와 완료 업무 보존은 별개이며,
+완료 업무는 `Done` 상태와 `Show completed tickets` 설정으로 계속 표시합니다.
 
 ## GitHub for Atlassian 연결
 

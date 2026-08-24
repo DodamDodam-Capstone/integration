@@ -1,6 +1,6 @@
 # 초기 설정 상태와 추후 검토 사항
 
-최종 검토일: 2026-08-22
+최종 검토일: 2026-08-24
 
 ## GitHub 초기 설정
 
@@ -254,6 +254,9 @@ Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습�
       변경, 보호 branch 이름 변경, Team 생성 권한을 Owner 전용으로 제한할지
       결정합니다.
 - [ ] 팀원 참가 후 Slack 채널 멤버 검토
+- [ ] 팀원 초대 후 실제 담당 명단으로 GitHub visible Team 구성
+- [ ] Jira parent/subteam 구성 후 SCRUM `Team` field와 저장소별 Team ID 연결
+- [ ] 기존 Jira 업무의 Team 값을 보정한 뒤 Team별 Board·Gantt filter 검증
 
 ### 2026-08-22 추가 보안 감사
 
