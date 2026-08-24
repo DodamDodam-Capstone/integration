@@ -63,10 +63,44 @@ class SlackNotifyTest(unittest.TestCase):
             ("feature/SCRUM-1-login", "development"),
         )
 
-    def test_direct_push_is_explicit(self):
+    def test_push_without_exact_pr_is_explicit(self):
         run = run_payload("push")
         run["head_branch"] = "main"
-        self.assertEqual(slack_notify.branch_flow(run, None), ("main (직접 push)", "main"))
+        self.assertEqual(
+            slack_notify.branch_flow(run, None), ("— (push 이벤트)", "main")
+        )
+
+    def test_push_selects_only_exact_merged_pull_request(self):
+        run = run_payload("push")
+        run["head_branch"] = "development"
+        exact = {
+            "number": 20,
+            "merge_commit_sha": run["head_sha"],
+            "head": {"ref": "feature/SCRUM-1-login"},
+            "base": {"ref": "development"},
+        }
+        unrelated_release = {
+            "number": 19,
+            "merge_commit_sha": "b" * 40,
+            "head": {"ref": "development"},
+            "base": {"ref": "main"},
+        }
+        self.assertIs(
+            slack_notify.select_pull_request(run, [unrelated_release, exact]), exact
+        )
+
+    def test_push_does_not_guess_open_release_pull_request(self):
+        run = run_payload("push")
+        run["head_branch"] = "development"
+        unrelated_release = {
+            "number": 19,
+            "merge_commit_sha": "b" * 40,
+            "head": {"ref": "development"},
+            "base": {"ref": "main"},
+        }
+        self.assertIsNone(
+            slack_notify.select_pull_request(run, [unrelated_release])
+        )
 
     def test_mrkdwn_characters_are_escaped(self):
         self.assertEqual(slack_notify.safe_text("<@channel>&`x`"), "&lt;@channel&gt;&amp;ʼxʼ")

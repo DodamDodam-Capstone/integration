@@ -122,7 +122,10 @@ PR, commit, actor, 실행 시도 횟수, 소요 시간, Actions 및 PR 링크를
 표시합니다. 일반 승격은 `development` → `main`으로 명확하게 표시됩니다.
 이미 merge된 PR의 workflow를 다시 실행해 GitHub event에서 PR 정보가 빠지는
 경우에는 GitHub API로 commit에 연결된 PR을 조회하여 target branch와 PR
-링크를 복구합니다.
+링크를 복구합니다. `push` 이벤트는 실행 commit이 PR의 `merge_commit_sha`와
+정확히 일치할 때만 해당 PR을 표시합니다. 일치 항목이 없으면 열려 있는 release
+PR을 임의로 선택하지 않고 source를 `— (push 이벤트)`, target을 실제 갱신된
+branch로 표시합니다.
 
 Slack webhook은 `hooks.slack.com` HTTPS 주소만 허용하고 일시 오류에는 제한된
 재시도를 수행합니다. 사용자 입력이 될 수 있는 branch·actor 텍스트는 Slack

@@ -90,16 +90,27 @@ def select_pull_request(run: dict, pull_requests: list[dict]) -> dict | None:
         return None
     trigger = run.get("event") or "unknown"
     branch = run.get("head_branch") or ""
+    sha = run.get("head_sha") or ""
 
     if trigger == "pull_request":
         for pull_request in pull_requests:
             if (pull_request.get("head") or {}).get("ref") == branch:
                 return pull_request
-    if trigger in {"push", "pull_request_target"}:
+        return None
+    if trigger == "push":
+        for pull_request in pull_requests:
+            if (
+                pull_request.get("merge_commit_sha") == sha
+                and (pull_request.get("base") or {}).get("ref") == branch
+            ):
+                return pull_request
+        return None
+    if trigger == "pull_request_target":
         for pull_request in pull_requests:
             if (pull_request.get("base") or {}).get("ref") == branch:
                 return pull_request
-    return pull_requests[0]
+        return None
+    return None
 
 
 def branch_flow(run: dict, pull_request: dict | None) -> tuple[str, str]:
@@ -110,7 +121,7 @@ def branch_flow(run: dict, pull_request: dict | None) -> tuple[str, str]:
         target = (pull_request.get("base") or {}).get("ref") or "—"
         return source, target
     if trigger == "push":
-        return f"{head_branch} (직접 push)", head_branch
+        return "— (push 이벤트)", head_branch
     if trigger == "workflow_dispatch":
         return head_branch, f"{head_branch} (수동 실행)"
     return head_branch, "—"
