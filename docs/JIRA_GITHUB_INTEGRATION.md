@@ -1,6 +1,10 @@
 # Jira와 GitHub Issue 연동 운영 규칙
 
-최종 검토일: 2026-08-22
+팀원이 바로 따라 할 수 있는 시작 경로 선택, 저장소별 예시와 완료 체크리스트는
+[`TEAM_WORKFLOW_GUIDE.md`](TEAM_WORKFLOW_GUIDE.md)에 정리합니다. 이 문서는
+관리자용 자동화·권한·복구 기준을 설명합니다.
+
+최종 검토일: 2026-08-24
 
 ## 적용 상태
 
@@ -10,12 +14,13 @@
 - `GitHub for Atlassian` 설치 완료
 - `frontend`, `backend`, `ai`, `integration` 네 저장소만 연결
 - GitHub 백필 상태 `FINISHED`, 권한 상태 `FULL ACCESS` 확인
-- Team Board Gantt에서 Epic과 네 Task의 계층 표시 확인
+- Team Board Gantt에서 Epic과 Task 계층 및 완료 업무 보존 표시 확인
 - 네 저장소에 `jira-issue-key` 및 `close-linked-issues` workflow 추가
 - 컴포넌트의 Jira key를 integration Bot PR까지 전달하도록 적용
 - Jira Automation `PR 병합 시 Task 완료` 활성화 및 실제 완료 흐름 검증
 - GitHub Issue Form에서 Jira Epic·Task·Bug 자동 생성 workflow 추가
-- 조직 Actions Secret `JIRA_API_TOKEN` 등록(2027-08-21 만료)
+- 조직 Actions Secret `JIRA_API_TOKEN`을 최소 Jira scope 토큰으로 교체하고
+  기존 토큰 철회 및 종단간 재검증 완료
 
 실제 검증 업무:
 
@@ -27,19 +32,38 @@ SCRUM-1 [EPIC] GitHub·Jira 협업 흐름 검증
 └─ SCRUM-5 [INT] GitHub·Jira 연동 및 문서 검증
 ```
 
+Issue Form 자동 생성 재검증:
+
+```text
+SCRUM-6 [EPIC] GitHub Issue 자동 동기화 구축
+├─ SCRUM-11 [FE]  frontend#15
+├─ SCRUM-12 [BE]  backend#14
+├─ SCRUM-13 [AI]  ai#14
+└─ SCRUM-14 [INT] integration#37
+```
+
+각 업무에서 Task 유형, `SCRUM-6` 상위 관계, `github-sync` 고유 레이블,
+GitHub 자동 링크 댓글과 상태 레이블, 저장소별 Slack Source/Target을
+확인했습니다. 같은 Issue를 다시 실행해도 Jira 업무와 댓글을 중복 생성하지
+않습니다.
+
 ## 목표
 
 - Jira는 Epic, Task, sprint, 일정, 담당자, 업무 상태의 기준으로 사용합니다.
 - GitHub Issue는 저장소별 개발 작업과 PR의 기준으로 사용합니다.
-- Jira Task 하나와 GitHub Task Issue 하나를 1:1로 연결합니다.
+- GitHub-first 업무는 Jira Task 하나와 GitHub Task Issue 하나를 1:1로
+  연결합니다.
+- Jira-first 업무는 이미 있는 Jira Task 키를 branch, commit, PR에 직접 사용하고
+  중복 생성을 막기 위해 GitHub Task Form을 다시 열지 않습니다.
 - PR merge를 기준으로 GitHub Issue와 Jira Task를 완료 처리합니다.
 - 동일 정보를 양쪽에서 독립적으로 수정하지 않아 상태 충돌을 방지합니다.
 
 ## 권장 계층
 
-Jira Epic 하나에 대응하는 GitHub Epic Issue는 `integration` 저장소에
-생성합니다. 실제 개발 Task는 담당 컴포넌트 저장소에 생성하고 GitHub
-sub-issue로 연결합니다.
+GitHub-first 흐름에서는 Jira Epic 하나에 대응하는 GitHub Epic Issue를
+`integration` 저장소에 생성합니다. 실제 개발 Task는 담당 컴포넌트 저장소에
+생성하고 GitHub sub-issue로 연결합니다. Jira-first 흐름은 Jira Epic과 child
+Task를 그대로 기준으로 사용하며 GitHub Issue를 중복 생성하지 않습니다.
 
 ```text
 Jira SCRUM-1: [EPIC] GitHub·Jira 협업 흐름 검증
@@ -65,6 +89,10 @@ GitHub sub-issue는 같은 Organization 소유자의 다른 저장소 Issue를 �
 네 저장소의 `New issue` 화면에 Task·Bug Issue Form을 제공합니다. Epic은 여러
 저장소가 참여하는 목표이므로 `integration`의 `Project Epic` Form에서만
 생성합니다.
+
+이 Form은 Jira Task가 아직 없을 때만 사용합니다. Jira에서 Task를 먼저 만든
+업무는 해당 Jira 키로 바로 개발하며, 같은 제목의 GitHub Issue Form을 추가로
+열지 않습니다.
 
 ```text
 GitHub Issue opened
@@ -93,20 +121,34 @@ Jira에서 보완한 계획 정보가 GitHub 수정으로 사라지는 것을 �
 ### 실패와 재시도
 
 - 의도적으로 Jira를 만들지 않을 Issue에는 생성 즉시 `jira-skip`을 붙입니다.
-- 이미 제목에 `SCRUM-<번호>`가 있으면 자동 생성을 건너뜁니다.
+- 이미 같은 GitHub Issue 고유 레이블로 만든 Jira 업무가 있으면 그 업무를
+  재사용합니다. 제목에 Jira 키가 있더라도 해당 고유 레이블과 프로젝트가
+  일치하지 않으면 임의의 기존 업무에 연결하지 않습니다.
 - 실패 알림은 저장소별 Slack Actions 채널에 전송됩니다.
 - Actions의 `GitHub Issue to Jira`에서 `Run workflow`를 선택하고 Issue 번호를
   입력하면 수동 재시도할 수 있습니다.
 - 중앙 실행 코드는 `integration/.github/scripts/sync_github_issue_to_jira.py`이며
-  네 저장소 workflow가 보호된 `integration/main` 버전을 사용합니다.
+  컴포넌트 저장소 workflow는 검증한 integration commit SHA를 사용합니다.
+  따라서 이후 `integration/main`이 바뀌어도 secret을 사용하는 실행 코드가
+  예고 없이 바뀌지 않습니다. 중앙 helper를 수정하면 단위 테스트와 integration
+  CI를 통과시킨 뒤 세 컴포넌트의 고정 SHA를 함께 갱신합니다.
+- 수동 재시도는 `main`에서만 허용하고 Issue 번호는 양의 정수만 받습니다.
+- `epic`, `task`, `bug` 레이블이 충돌하면 임의로 유형을 선택하지 않고 실패
+  알림을 보냅니다.
+- Jira 생성, GitHub 제목 변경, 링크 댓글, Slack 알림 중간에 실패해도 고유 Jira
+  레이블, 댓글 marker, `jira-linked`, `jira-notified`를 기준으로 다음 실행이
+  완료되지 않은 단계만 복구합니다.
 
 ### 권한과 토큰 운영
 
 - 조직 Secret: `JIRA_API_TOKEN`(네 저장소만 선택 허용)
-- Jira API 권한: classic `read:jira-work`, `write:jira-work`만 허용
+- 토큰 이름: `DodamDodam GitHub Issue Sync v2`
+- Jira API 권한: scoped token의 classic `read:jira-work`,
+  `write:jira-work`만 허용
 - 만료일: `2027-08-21`
 - 만료 전 새 토큰을 만든 뒤 동일 Secret 값을 교체하고 테스트 Issue로 확인합니다.
 - Secret 값은 로그·문서·로컬 파일에 기록하지 않습니다.
+- 새 토큰으로 네 저장소 생성과 재시도를 확인한 뒤 기존 토큰은 철회했습니다.
 
 Jira 업무 유형 ID는 프로젝트 설정에서 확인한 Epic `10001`, Task `10003`, Bug
 `10006`으로 고정합니다. Jira 표시 언어가 바뀌어도 API 생성이 깨지지 않도록
@@ -114,6 +156,57 @@ Jira 업무 유형 ID는 프로젝트 설정에서 확인한 Epic `10001`, Task 
 
 추후 검토할 GitHub 설정은 Organization Project에 `Parent issue`,
 `Sub-issue progress`, `Repository`, `Status` field를 추가하는 것입니다.
+
+## 팀과 권한 구조
+
+팀원 초대 전에는 빈 팀을 저장소 개수에 맞춰 미리 만들지 않습니다. 실제 담당과
+중복 역할을 확인한 뒤 팀원을 먼저 Organization 및 Jira에 초대하고 다음 최소
+구조를 적용합니다.
+
+### GitHub Teams
+
+| 팀 | 기본 저장소 권한 | 용도 |
+| --- | --- | --- |
+| `frontend` | frontend `Write` | Frontend 개발과 리뷰 |
+| `backend` | backend `Write` | Backend 개발과 리뷰 |
+| `ai` | ai `Write` | AI 개발과 리뷰 |
+| `integration-maintainers` | integration `Write` | 통합 설정과 Docker 검증 |
+| `maintainers` | 네 저장소 `Maintain` | 신뢰할 수 있는 2명 이상이 생길 때만 생성 |
+
+저장소가 public이어도 공개되는 것은 읽기 권한뿐입니다. 쓰기 권한, 팀 mention,
+CODEOWNERS와 팀 리뷰 배정에는 GitHub Teams가 유용합니다. 팀은 visible로 만들고,
+각 도메인 팀에 대응 저장소만 직접 부여합니다. 현재 규모에서는 parent/child
+GitHub Team을 만들지 않습니다. child team이 parent의 저장소 권한을 상속하므로
+소규모 조직에서는 의도하지 않은 권한 확대가 발생하기 쉽습니다.
+
+팀원이 한 명뿐인 팀에는 자동 리뷰 배정을 켜지 않습니다. 두 명 이상일 때
+CODEOWNERS를 추가하고 load-balance 방식으로 한 명을 자동 요청합니다. Owner와
+Admin은 비상 설정을 담당할 1~2명으로 제한하고 일반 개발자는 `Write`, 릴리스
+관리자는 필요한 경우에만 `Maintain`을 사용합니다. 브랜치 Ruleset이
+`main`·`development` 직접 push를 별도로 차단하므로 `Write` 부여가 보호 브랜치
+우회를 의미하지 않습니다.
+
+### Jira/Atlassian Teams
+
+권장 구조는 parent `DodamDodam Capstone` 아래 `Frontend`, `Backend`, `AI`
+subteam입니다. `Integration/Platform`은 전담 인원이 2명 이상 생겼을 때만
+추가합니다. Jira Team은 업무의 책임 그룹을 표현하는 용도이며 보안 권한 경계가
+아닙니다. Jira 접근 권한은 Atlassian Group과 Jira project role로 별도
+관리하고, 일반 팀은 invite-only 또는 closed로 운영합니다.
+
+Jira Team을 만들기만 해서는 업무가 자동 배정되지 않습니다. 실제 적용할 때는
+다음 순서를 지킵니다.
+
+1. SCRUM 화면에 `Team` field를 추가합니다.
+2. 저장소와 Jira Team ID의 매핑을 GitHub Issue 동기화 workflow에 추가합니다.
+3. 기존 SCRUM 업무의 Team 값을 모두 보정합니다.
+4. 그 뒤에 Team별 Board·Gantt filter를 적용합니다.
+
+`Assignee`는 실제 담당 개인, `Team`은 책임 그룹으로 사용합니다. 기존
+`[FE]`·`[BE]`·`[AI]`·`[INT]` 제목 접두사는 Slack과 검색 식별을 위해 그대로
+유지합니다. 기존 업무를 보정하기 전에 Team filter를 켜면 Team 값이 빈 업무가
+Gantt에서 사라진 것처럼 보일 수 있습니다. 팀 구조와 완료 업무 보존은 별개이며,
+완료 업무는 `Done` 상태와 `Show completed tickets` 설정으로 계속 표시합니다.
 
 ## GitHub for Atlassian 연결
 
@@ -244,6 +337,9 @@ PR merge to development
 - target이 `development` 또는 허용된 hotfix의 `main`인지 확인
 - 최소 권한인 `issues: write`, `pull-requests: read`만 사용
 - PR code checkout 및 실행 금지
+- PR 템플릿의 HTML 주석과 code block 안에 있는 `Resolves #123` 예시는 무시
+- 연결 번호가 GitHub Pull Request이면 닫지 않고, 열린 같은 저장소 Issue만 완료
+- 검증한 중앙 helper를 변경 불가능한 commit SHA로 checkout
 - Dependabot, Integration Bot, release PR 제외
 
 ## Release Epic 연결
@@ -267,7 +363,7 @@ integration build 결과를 함께 추적할 수 있습니다.
 ## Smart Commit 사용 원칙
 
 Jira Smart Commit은 `SCRUM-2 #done` 같은 상태 변경 명령을 지원합니다. 하지만
-현재 저장소는 squash merge를 사용하며, Atlassian은 commit history가
+기능 변경은 `development`로 squash merge하며, Atlassian은 commit history가
 재작성되면 Smart Commit 명령이 중복 실행될 수 있다고 안내합니다.
 
 따라서 commit의 Jira key는 개발 정보 연결에만 사용하고, 상태 변경은 PR
@@ -283,7 +379,7 @@ event 기반 Jira Automation으로 처리합니다.
 4. [완료] PR template과 Jira key 검사 workflow 반영
 5. [완료] `development` merge 시 GitHub Issue 종료 workflow 반영
 6. [완료] frontend/backend/ai/integration 기능 PR과 CI 연결 검증
-7. [검토] Jira Branch/PR Automation으로 업무 상태 자동 전환
+7. [완료] Jira PR merge Automation으로 Task 상태를 `완료`로 전환
 8. [검토] GitHub Organization Project에 sub-issue 관련 field 추가
 9. [검토] 필요할 때 Organization Issue Type에 `Epic` 추가
 
@@ -301,9 +397,18 @@ Team Board Gantt는 Jira의 상위 항목 관계를 읽어 Epic과 Task를 자�
 계층화합니다. 실제 검증에서 `SCRUM-1` 아래 `SCRUM-2`~`SCRUM-5`가
 `1.1`~`1.4`로 표시되었습니다.
 
-첫 Task 완료 후 Team Board의 기본 활성 업무 필터가 5개에서 4개로 변경되는 것을
-확인했습니다. 모든 Task와 Epic 완료 후에는 `0/0 work item`으로 변경되었습니다.
-완료 업무까지 함께 보려면 Team Board filter에서 완료 상태를 포함합니다.
+업무가 완료될 때 Jira Automation은 삭제 작업을 실행하지 않고 상태만 `완료`로
+전환합니다. 2026-08-22 감사에서 흐름 구성이 `Pull request merged` →
+`issuetype != Epic` → `업무 항목을 완료로 전환`뿐임을 확인했고, 최근 감사 로그도
+성공 또는 적용 대상 없음으로 기록되어 있었습니다.
+
+완료 업무가 사라져 보였던 원인은 Team Board Gantt의 `View Settings`에서
+`Show completed tickets`가 꺼져 있었기 때문입니다. 이 옵션을 활성화하고 새로
+고침한 뒤 최초 `SCRUM-1`~`SCRUM-10` 총 10개 업무가 유지되며 완료된 9개 업무가
+`완료` 상태로 표시되는 것을 재검증했습니다. Issue Form 종단간 테스트로
+`SCRUM-11`~`SCRUM-14`를 추가한 뒤에도 Gantt가 `14/14 work items`를 표시해
+완료 9개와 진행 전 5개를 함께 보존하는 것을 확인했습니다. 이 옵션을 끄면
+데이터가 삭제되는 것이 아니라 현재 Gantt View에서만 숨겨집니다.
 
 일정 막대를 사용하려면 다음 항목을 입력합니다.
 

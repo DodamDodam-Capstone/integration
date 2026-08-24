@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 import json
+import html
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -17,6 +19,13 @@ PARENT_SECTION_RE = re.compile(
 )
 ISSUE_TYPE_IDS = {"에픽": "10001", "작업": "10003", "버그": "10006"}
 LINK_MARKER = "<!-- jira-auto-link -->"
+RETRYABLE_HTTP = {429, 500, 502, 503, 504}
+
+
+class HttpRequestError(RuntimeError):
+    def __init__(self, method: str, url: str, code: int, detail: str):
+        super().__init__(f"{method} {url} 실패 ({code}): {detail}")
+        self.code = code
 
 
 def required_env(name: str) -> str:
@@ -41,7 +50,7 @@ def request_json(method: str, url: str, *, headers: dict[str, str], payload=None
                 return {"raw": raw.decode(errors="replace")}
     except urllib.error.HTTPError as error:
         detail = error.read().decode(errors="replace")[:1000]
-        raise RuntimeError(f"{method} {url} 실패 ({error.code}): {detail}") from error
+        raise HttpRequestError(method, url, error.code, detail) from error
 
 
 def github_headers(token: str) -> dict[str, str]:
@@ -70,17 +79,28 @@ def extract_parent(body: str) -> str | None:
 
 
 def issue_type(labels: set[str]) -> str:
-    if "epic" in labels:
-        return "에픽"
-    if "bug" in labels:
-        return "버그"
-    return "작업"
+    selected = labels & {"epic", "bug", "task"}
+    if len(selected) > 1:
+        raise ValueError(
+            "epic, bug, task 유형 레이블은 정확히 하나만 지정해야 합니다: "
+            + ", ".join(sorted(selected))
+        )
+    return {"epic": "에픽", "bug": "버그", "task": "작업"}.get(
+        next(iter(selected), "task"), "작업"
+    )
 
 
 def summary_for(title: str, prefix: str) -> str:
     clean = JIRA_KEY_RE.sub("", title).strip()
     clean = re.sub(r"^\[(?:FE|BE|AI|INT|EPIC)\]\s*", "", clean, flags=re.I)
+    if not clean:
+        raise ValueError("Jira summary로 사용할 GitHub Issue 제목이 비어 있습니다.")
     return f"[{prefix}] {clean}"[:255]
+
+
+def slack_text(value: object, limit: int = 500) -> str:
+    normalized = " ".join(str(value or "—").split()).replace("`", "ʼ")
+    return html.escape(normalized, quote=False)[:limit]
 
 
 def adf_description(issue: dict, repository: str) -> dict:
@@ -107,22 +127,99 @@ def slack_notify(webhook: str, *, ok: bool, repository: str, issue: dict, jira_k
     icon = ":white_check_mark:" if ok else ":x:"
     title = "Jira 업무 자동 생성 완료" if ok else "Jira 업무 자동 생성 실패"
     fields = [
-        {"type": "mrkdwn", "text": f"*Repository*\n`{repository}`"},
+        {"type": "mrkdwn", "text": f"*Repository*\n`{slack_text(repository)}`"},
         {"type": "mrkdwn", "text": f"*Event*\nGitHub Issue #{issue['number']} opened"},
         {"type": "mrkdwn", "text": f"*Source*\n<{issue['html_url']}|GitHub Issue #{issue['number']}>"},
         {"type": "mrkdwn", "text": f"*Target*\n<{jira_url}|{jira_key}>" if jira_key else "*Target*\nJira 생성 실패"},
-        {"type": "mrkdwn", "text": f"*Actor*\n`{issue.get('user', {}).get('login', 'unknown')}`"},
-        {"type": "mrkdwn", "text": f"*Result*\n{'연결 완료' if ok else detail[:200]}"},
+        {"type": "mrkdwn", "text": f"*Actor*\n`{slack_text(issue.get('user', {}).get('login', 'unknown'))}`"},
+        {"type": "mrkdwn", "text": f"*Result*\n{'연결 완료' if ok else slack_text(detail, 200)}"},
     ]
     payload = {
         "text": f"{icon} [{repository}] {title}: GitHub Issue #{issue['number']} → {jira_key or '실패'}",
         "blocks": [
             {"type": "header", "text": {"type": "plain_text", "text": f"{icon} {title}"}},
             {"type": "section", "fields": fields},
-            {"type": "context", "elements": [{"type": "mrkdwn", "text": f"*Title:* {issue['title']}"}]},
+            {"type": "context", "elements": [{"type": "mrkdwn", "text": f"*Title:* {slack_text(issue['title'], 500)}"}]},
         ],
     }
-    request_json("POST", webhook, headers={"Content-Type": "application/json"}, payload=payload)
+    post_slack(webhook, payload)
+
+
+def post_slack(webhook: str, payload: dict, *, attempts: int = 3) -> None:
+    parsed = urllib.parse.urlparse(webhook)
+    if parsed.scheme != "https" or parsed.hostname != "hooks.slack.com":
+        raise RuntimeError("SLACK_WEBHOOK_URL이 허용된 Slack HTTPS 주소가 아닙니다.")
+    data = json.dumps(payload, ensure_ascii=False).encode()
+    for attempt in range(1, attempts + 1):
+        request = urllib.request.Request(
+            webhook,
+            data=data,
+            method="POST",
+            headers={"Content-Type": "application/json; charset=utf-8"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=15) as response:
+                body = response.read().decode(errors="replace").strip()
+                if response.status == 200 and body == "ok":
+                    return
+                raise RuntimeError(
+                    f"Slack webhook이 예상치 못한 응답을 반환했습니다(HTTP {response.status})."
+                )
+        except urllib.error.HTTPError as error:
+            if error.code not in RETRYABLE_HTTP or attempt == attempts:
+                raise RuntimeError(f"Slack webhook이 HTTP {error.code}를 반환했습니다.") from error
+        except urllib.error.URLError as error:
+            if attempt == attempts:
+                raise RuntimeError("Slack webhook 네트워크 요청에 실패했습니다.") from error
+        time.sleep(attempt)
+
+
+def all_github_comments(api: str, headers: dict[str, str]) -> list[dict]:
+    comments: list[dict] = []
+    for page in range(1, 101):
+        batch = request_json(
+            "GET", f"{api}/comments?per_page=100&page={page}", headers=headers
+        )
+        comments.extend(batch)
+        if len(batch) < 100:
+            return comments
+    raise RuntimeError("GitHub Issue 댓글이 10,000개를 초과하여 자동 링크를 확인할 수 없습니다.")
+
+
+def find_existing_jira_key(
+    jira_api: str,
+    headers: dict[str, str],
+    project: str,
+    unique_label: str,
+    title: str,
+) -> str | None:
+    jql = f'project = "{project}" AND labels = "{unique_label}" ORDER BY created DESC'
+    query = urllib.parse.urlencode({"jql": jql, "fields": "key", "maxResults": 2})
+    search = request_json("GET", f"{jira_api}/rest/api/3/search/jql?{query}", headers=headers)
+    existing = search.get("issues", [])
+    if len(existing) > 1:
+        raise RuntimeError(f"Jira 중복 감지: {unique_label} 레이블 업무가 둘 이상입니다.")
+    if existing:
+        return existing[0]["key"]
+
+    title_key = JIRA_KEY_RE.search(title)
+    if not title_key:
+        return None
+    candidate = title_key.group(0).upper()
+    try:
+        jira_issue = request_json(
+            "GET",
+            f"{jira_api}/rest/api/3/issue/{candidate}?fields=labels,project",
+            headers=headers,
+        )
+    except HttpRequestError as error:
+        if error.code == 404:
+            return None
+        raise
+    fields = jira_issue.get("fields") or {}
+    same_project = (fields.get("project") or {}).get("key") == project
+    owned = unique_label in (fields.get("labels") or [])
+    return candidate if same_project and owned else None
 
 
 def main() -> int:
@@ -130,11 +227,13 @@ def main() -> int:
     jira_token = required_env("JIRA_API_TOKEN")
     repository = required_env("GITHUB_REPOSITORY")
     number = required_env("ISSUE_NUMBER")
+    if not re.fullmatch(r"[1-9]\d*", number):
+        raise ValueError("ISSUE_NUMBER는 1 이상의 정수여야 합니다.")
     jira_api = required_env("JIRA_API_URL").rstrip("/")
     jira_site = required_env("JIRA_SITE_URL").rstrip("/")
     project = required_env("JIRA_PROJECT_KEY")
     prefix = required_env("REPOSITORY_PREFIX")
-    slack_webhook = os.environ.get("SLACK_WEBHOOK_URL", "").strip()
+    slack_webhook = required_env("SLACK_WEBHOOK_URL")
 
     gh_api = f"https://api.github.com/repos/{repository}"
     issue = request_json("GET", f"{gh_api}/issues/{number}", headers=github_headers(github_token))
@@ -150,37 +249,32 @@ def main() -> int:
     headers = jira_headers(jira_token)
     kind = issue_type(labels)
     target_prefix = "EPIC" if kind == "에픽" else prefix
-    title_key = JIRA_KEY_RE.search(issue["title"])
-    if title_key:
-        jira_key = title_key.group(0).upper()
-    else:
-        jql = f'project = "{project}" AND labels = "{unique_label}" ORDER BY created DESC'
-        query = urllib.parse.urlencode({"jql": jql, "fields": "key", "maxResults": 1})
-        search = request_json("GET", f"{jira_api}/rest/api/3/search/jql?{query}", headers=headers)
-        existing = search.get("issues", [])
-        if existing:
-            jira_key = existing[0]["key"]
-        else:
-            fields = {
-                "project": {"key": project},
-                "summary": summary_for(issue["title"], target_prefix),
-                "issuetype": {"id": ISSUE_TYPE_IDS[kind]},
-                "description": adf_description(issue, repository),
-                "labels": ["github-sync", unique_label],
-            }
-            parent = extract_parent(issue.get("body") or "")
-            if parent and kind != "에픽":
-                fields["parent"] = {"key": parent}
-            created = request_json("POST", f"{jira_api}/rest/api/3/issue", headers=headers, payload={"fields": fields})
-            jira_key = created["key"]
+    jira_key = find_existing_jira_key(
+        jira_api, headers, project, unique_label, issue["title"]
+    )
+    if not jira_key:
+        fields = {
+            "project": {"key": project},
+            "summary": summary_for(issue["title"], target_prefix),
+            "issuetype": {"id": ISSUE_TYPE_IDS[kind]},
+            "description": adf_description(issue, repository),
+            "labels": ["github-sync", unique_label],
+        }
+        parent = extract_parent(issue.get("body") or "")
+        if parent and kind != "에픽":
+            fields["parent"] = {"key": parent}
+        created = request_json(
+            "POST", f"{jira_api}/rest/api/3/issue", headers=headers, payload={"fields": fields}
+        )
+        jira_key = created["key"]
 
     jira_url = f"{jira_site}/browse/{jira_key}"
     new_title = f"{jira_key} {summary_for(issue['title'], target_prefix)}"
     if issue["title"] != new_title:
         request_json("PATCH", f"{gh_api}/issues/{number}", headers=github_headers(github_token), payload={"title": new_title})
 
-    comments = request_json(
-        "GET", f"{gh_api}/issues/{number}/comments?per_page=100", headers=github_headers(github_token)
+    comments = all_github_comments(
+        f"{gh_api}/issues/{number}", github_headers(github_token)
     )
     if not any(LINK_MARKER in (comment.get("body") or "") for comment in comments):
         request_json(

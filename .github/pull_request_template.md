@@ -13,6 +13,11 @@
 <!-- 예: SCRUM-123 [INT] 서비스 통합 검증 -->
 <!-- Jira: https://dodamdodam.atlassian.net/browse/SCRUM-123 -->
 
+## 관련 GitHub 이슈
+
+<!-- 예: Resolves #123 -->
+<!-- Jira-first 업무로 GitHub Issue가 없으면 비워 둡니다. -->
+
 ## 검증
 
 - [ ] 컴포넌트 SHA는 변경할 수 없는 전체 commit SHA입니다.

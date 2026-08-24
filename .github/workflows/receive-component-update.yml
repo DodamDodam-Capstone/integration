@@ -15,27 +15,32 @@ jobs:
   update:
     name: update-component-lock
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       COMPONENT: ${{ github.event.client_payload.component }}
       SOURCE_REPOSITORY: ${{ github.event.client_payload.repository }}
       SOURCE_SHA: ${{ github.event.client_payload.sha }}
       JIRA_KEY: ${{ github.event.client_payload.jira_key }}
       SOURCE_RUN_URL: ${{ github.event.client_payload.run_url }}
+      TARGET_BRANCH: development
     steps:
       - name: Create Integration Bot token
         id: app-token
-        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          app-id: ${{ secrets.INTEGRATION_APP_ID }}
+          client-id: Iv23liyibAu0H0gOIi2f
           private-key: ${{ secrets.INTEGRATION_APP_PRIVATE_KEY }}
           owner: DodamDodam-Capstone
           repositories: integration
+          permission-contents: write
+          permission-pull-requests: write
 
       - name: Checkout integration repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
+          ref: development
 
       - name: Validate event and update component lock
         id: update-lock
@@ -43,7 +48,8 @@ jobs:
           python3 scripts/component_lock.py update \
             --component "$COMPONENT" \
             --repository "$SOURCE_REPOSITORY" \
-            --sha "$SOURCE_SHA"
+            --sha "$SOURCE_SHA" \
+            --run-url "$SOURCE_RUN_URL"
           if git diff --quiet -- components.lock.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
@@ -55,8 +61,24 @@ jobs:
             echo "jira_key=" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Commit bot branch
+      - name: 최신 main 커밋 여부 확인
         if: steps.update-lock.outputs.changed == 'true'
+        id: source-head
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          CURRENT_SHA=$(gh api "repos/$SOURCE_REPOSITORY/commits/main" --jq .sha)
+          if [[ "$CURRENT_SHA" == "$SOURCE_SHA" ]]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "current=false" >> "$GITHUB_OUTPUT"
+            echo "더 최신인 main 커밋 $CURRENT_SHA 이 있어 현재 이벤트를 건너뜁니다."
+          fi
+
+      - name: Commit bot branch
+        if: >-
+          steps.update-lock.outputs.changed == 'true' &&
+          steps.source-head.outputs.current == 'true'
         env:
           BRANCH: bot/update-${{ github.event.client_payload.component }}
           VALID_JIRA_KEY: ${{ steps.update-lock.outputs.jira_key }}
@@ -70,7 +92,9 @@ jobs:
           git push --force origin "HEAD:refs/heads/$BRANCH"
 
       - name: Create or update pull request
-        if: steps.update-lock.outputs.changed == 'true'
+        if: >-
+          steps.update-lock.outputs.changed == 'true' &&
+          steps.source-head.outputs.current == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           BRANCH: bot/update-${{ github.event.client_payload.component }}
@@ -84,13 +108,14 @@ jobs:
             "- 저장소: $SOURCE_REPOSITORY" \
             "- 커밋: $SOURCE_SHA" \
             "- Jira: ${VALID_JIRA_KEY:-없음}" \
+            "- 대상 브랜치: $TARGET_BRANCH" \
             "- 소스 workflow: $SOURCE_RUN_URL" \
             '' \
             'Gitmoji 제목 검사와 전체 integration CI를 통과해야 병합할 수 있습니다.')
-          PR_NUMBER=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number')
+          PR_NUMBER=$(gh pr list --head "$BRANCH" --base "$TARGET_BRANCH" --state open --json number --jq '.[0].number')
           if [[ -z "$PR_NUMBER" ]]; then
-            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$BODY"
-            PR_NUMBER=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number')
+            gh pr create --base "$TARGET_BRANCH" --head "$BRANCH" --title "$TITLE" --body "$BODY"
+            PR_NUMBER=$(gh pr list --head "$BRANCH" --base "$TARGET_BRANCH" --state open --json number --jq '.[0].number')
           else
             gh pr edit "$PR_NUMBER" --title "$TITLE" --body "$BODY"
           fi
@@ -99,3 +124,9 @@ jobs:
       - name: No component change
         if: steps.update-lock.outputs.changed != 'true'
         run: echo "$COMPONENT already points to $SOURCE_SHA; no pull request is needed."
+
+      - name: 오래된 이벤트 건너뛰기
+        if: >-
+          steps.update-lock.outputs.changed == 'true' &&
+          steps.source-head.outputs.current != 'true'
+        run: echo "$SOURCE_SHA is no longer the latest main revision; no pull request is needed."

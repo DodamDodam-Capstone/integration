@@ -5,7 +5,7 @@ labels: ["epic"]
 body:
   - type: markdown
     attributes:
-      value: "Epic은 integration에서만 생성합니다. 생성된 Jira Epic 아래에 저장소별 Task를 연결하세요."
+      value: "Jira Epic이 아직 없을 때만 사용합니다. Epic은 integration에서 생성하고, 생성된 Jira Epic 아래에 저장소별 Task를 연결하세요."
   - type: textarea
     id: outcome
     attributes:
