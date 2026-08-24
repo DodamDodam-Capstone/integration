@@ -6,7 +6,7 @@
 
 - [x] 네 저장소에 초기 commit 반영
 - [x] 모든 저장소에 `development` branch 생성
-- [x] squash merge 활성화, merge commit과 rebase merge 비활성화
+- [x] `development` squash, `main` merge commit 전용 Ruleset 설계
 - [x] merge 후 source branch 자동 삭제 비활성화
 - [x] `main`, `development` Ruleset 활성화
 - [x] Organization 관리자 우회를 `Always allow`로 설정
@@ -196,8 +196,7 @@ Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습�
 ### 인수인계 기준 상태
 
 - [ ] 초기 독립 squash로 끊긴 main/development 계보를 force push 없이
-      보호된 PR로 보존·정렬. 현재 네 저장소의 `development` → `main` 승격 PR은
-      충돌 상태이며, 장기 브랜치의 병합 방식을 분리한 뒤 처리해야 합니다.
+      보호된 PR로 보존·정렬. Ruleset 분리 후 준비된 동기화 PR로 처리합니다.
 
 - [x] 초기 Dependabot major Action 갱신 PR을 merge하지 않고 종료
 - [x] 더 이상 필요하지 않은 설정 및 승격 test PR 종료

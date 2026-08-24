@@ -351,7 +351,7 @@ integration build 결과를 함께 추적할 수 있습니다.
 ## Smart Commit 사용 원칙
 
 Jira Smart Commit은 `SCRUM-2 #done` 같은 상태 변경 명령을 지원합니다. 하지만
-현재 저장소는 squash merge를 사용하며, Atlassian은 commit history가
+기능 변경은 `development`로 squash merge하며, Atlassian은 commit history가
 재작성되면 Smart Commit 명령이 중복 실행될 수 있다고 안내합니다.
 
 따라서 commit의 Jira key는 개발 정보 연결에만 사용하고, 상태 변경은 PR
