@@ -240,6 +240,21 @@ Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습�
 - [ ] backend와 AI 사이 contract test 추가
 - [ ] frontend와 backend 사이 end-to-end test 추가
 
+## 2026-08-24 팀 업무 가이드 보완
+
+- [x] integration에 Jira-first와 GitHub-first를 구분하는 중앙 팀 가이드 추가
+- [x] frontend, backend, AI에 저장소별 branch, commit, PR, 완료 예시 추가
+- [x] Jira Task가 이미 있으면 GitHub Issue Form을 다시 사용하지 않는 중복 방지
+      기준을 README, 기여 가이드, Issue Form에 표시
+- [x] GitHub-first PR의 `Resolves #번호`와 Jira-first PR의 Jira 링크 전용 본문을
+      구분
+- [x] `development` → `main` 릴리스 PR은 branch 키 대신 제목의 sprint/Epic 키를
+      검사하도록 `jira-issue-key` 정책 정렬
+- [ ] 변경을 네 저장소 `development`에 병합한 뒤 기존 릴리스 PR의 Jira 검사가
+      성공하는지 확인
+- [ ] Slack push 이벤트가 열린 릴리스 PR을 실제 merge PR로 오인하지 않도록 PR
+      매칭 로직 보완
+
 ## 보안 및 유지보수 검토
 
 - [x] 외부 Action을 검토한 전체 commit SHA로 고정

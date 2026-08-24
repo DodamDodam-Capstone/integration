@@ -1,5 +1,9 @@
 # Jira와 GitHub Issue 연동 운영 규칙
 
+팀원이 바로 따라 할 수 있는 시작 경로 선택, 저장소별 예시와 완료 체크리스트는
+[`TEAM_WORKFLOW_GUIDE.md`](TEAM_WORKFLOW_GUIDE.md)에 정리합니다. 이 문서는
+관리자용 자동화·권한·복구 기준을 설명합니다.
+
 최종 검토일: 2026-08-24
 
 ## 적용 상태
@@ -47,15 +51,19 @@ GitHub 자동 링크 댓글과 상태 레이블, 저장소별 Slack Source/Targe
 
 - Jira는 Epic, Task, sprint, 일정, 담당자, 업무 상태의 기준으로 사용합니다.
 - GitHub Issue는 저장소별 개발 작업과 PR의 기준으로 사용합니다.
-- Jira Task 하나와 GitHub Task Issue 하나를 1:1로 연결합니다.
+- GitHub-first 업무는 Jira Task 하나와 GitHub Task Issue 하나를 1:1로
+  연결합니다.
+- Jira-first 업무는 이미 있는 Jira Task 키를 branch, commit, PR에 직접 사용하고
+  중복 생성을 막기 위해 GitHub Task Form을 다시 열지 않습니다.
 - PR merge를 기준으로 GitHub Issue와 Jira Task를 완료 처리합니다.
 - 동일 정보를 양쪽에서 독립적으로 수정하지 않아 상태 충돌을 방지합니다.
 
 ## 권장 계층
 
-Jira Epic 하나에 대응하는 GitHub Epic Issue는 `integration` 저장소에
-생성합니다. 실제 개발 Task는 담당 컴포넌트 저장소에 생성하고 GitHub
-sub-issue로 연결합니다.
+GitHub-first 흐름에서는 Jira Epic 하나에 대응하는 GitHub Epic Issue를
+`integration` 저장소에 생성합니다. 실제 개발 Task는 담당 컴포넌트 저장소에
+생성하고 GitHub sub-issue로 연결합니다. Jira-first 흐름은 Jira Epic과 child
+Task를 그대로 기준으로 사용하며 GitHub Issue를 중복 생성하지 않습니다.
 
 ```text
 Jira SCRUM-1: [EPIC] GitHub·Jira 협업 흐름 검증
@@ -81,6 +89,10 @@ GitHub sub-issue는 같은 Organization 소유자의 다른 저장소 Issue를 �
 네 저장소의 `New issue` 화면에 Task·Bug Issue Form을 제공합니다. Epic은 여러
 저장소가 참여하는 목표이므로 `integration`의 `Project Epic` Form에서만
 생성합니다.
+
+이 Form은 Jira Task가 아직 없을 때만 사용합니다. Jira에서 Task를 먼저 만든
+업무는 해당 Jira 키로 바로 개발하며, 같은 제목의 GitHub Issue Form을 추가로
+열지 않습니다.
 
 ```text
 GitHub Issue opened
