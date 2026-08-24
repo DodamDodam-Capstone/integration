@@ -16,6 +16,7 @@ PR을 생성하지 않습니다.
 
 문서:
 
+- [팀 업무 시작과 완료 가이드](docs/TEAM_WORKFLOW_GUIDE.md)
 - [GitHub 협업 및 CI 흐름](docs/GITHUB_WORKFLOW.md)
 - [초기 설정 상태와 추후 검토 사항](docs/SETUP_STATUS.md)
 - [Jira와 GitHub Issue 연동 운영 규칙](docs/JIRA_GITHUB_INTEGRATION.md)
