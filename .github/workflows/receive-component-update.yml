@@ -22,6 +22,7 @@ jobs:
       SOURCE_SHA: ${{ github.event.client_payload.sha }}
       JIRA_KEY: ${{ github.event.client_payload.jira_key }}
       SOURCE_RUN_URL: ${{ github.event.client_payload.run_url }}
+      TARGET_BRANCH: development
     steps:
       - name: Create Integration Bot token
         id: app-token
@@ -39,6 +40,7 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
+          ref: development
 
       - name: Validate event and update component lock
         id: update-lock
@@ -106,13 +108,14 @@ jobs:
             "- 저장소: $SOURCE_REPOSITORY" \
             "- 커밋: $SOURCE_SHA" \
             "- Jira: ${VALID_JIRA_KEY:-없음}" \
+            "- 대상 브랜치: $TARGET_BRANCH" \
             "- 소스 workflow: $SOURCE_RUN_URL" \
             '' \
             'Gitmoji 제목 검사와 전체 integration CI를 통과해야 병합할 수 있습니다.')
-          PR_NUMBER=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number')
+          PR_NUMBER=$(gh pr list --head "$BRANCH" --base "$TARGET_BRANCH" --state open --json number --jq '.[0].number')
           if [[ -z "$PR_NUMBER" ]]; then
-            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$BODY"
-            PR_NUMBER=$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number')
+            gh pr create --base "$TARGET_BRANCH" --head "$BRANCH" --title "$TITLE" --body "$BODY"
+            PR_NUMBER=$(gh pr list --head "$BRANCH" --base "$TARGET_BRANCH" --state open --json number --jq '.[0].number')
           else
             gh pr edit "$PR_NUMBER" --title "$TITLE" --body "$BODY"
           fi

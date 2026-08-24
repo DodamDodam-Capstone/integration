@@ -1,6 +1,6 @@
 # Jira와 GitHub Issue 연동 운영 규칙
 
-최종 검토일: 2026-08-22
+최종 검토일: 2026-08-24
 
 ## 적용 상태
 
@@ -15,7 +15,8 @@
 - 컴포넌트의 Jira key를 integration Bot PR까지 전달하도록 적용
 - Jira Automation `PR 병합 시 Task 완료` 활성화 및 실제 완료 흐름 검증
 - GitHub Issue Form에서 Jira Epic·Task·Bug 자동 생성 workflow 추가
-- 조직 Actions Secret `JIRA_API_TOKEN`의 classic scope 교체 검증 진행 중
+- 조직 Actions Secret `JIRA_API_TOKEN`을 최소 Jira scope 토큰으로 교체하고
+  기존 토큰 철회 및 종단간 재검증 완료
 
 실제 검증 업무:
 
@@ -26,6 +27,21 @@ SCRUM-1 [EPIC] GitHub·Jira 협업 흐름 검증
 ├─ SCRUM-4 [AI]  GitHub·Jira 연동 및 문서 검증
 └─ SCRUM-5 [INT] GitHub·Jira 연동 및 문서 검증
 ```
+
+Issue Form 자동 생성 재검증:
+
+```text
+SCRUM-6 [EPIC] GitHub Issue 자동 동기화 구축
+├─ SCRUM-11 [FE]  frontend#15
+├─ SCRUM-12 [BE]  backend#14
+├─ SCRUM-13 [AI]  ai#14
+└─ SCRUM-14 [INT] integration#37
+```
+
+각 업무에서 Task 유형, `SCRUM-6` 상위 관계, `github-sync` 고유 레이블,
+GitHub 자동 링크 댓글과 상태 레이블, 저장소별 Slack Source/Target을
+확인했습니다. 같은 Issue를 다시 실행해도 Jira 업무와 댓글을 중복 생성하지
+않습니다.
 
 ## 목표
 
@@ -114,10 +130,13 @@ Jira에서 보완한 계획 정보가 GitHub 수정으로 사라지는 것을 �
 ### 권한과 토큰 운영
 
 - 조직 Secret: `JIRA_API_TOKEN`(네 저장소만 선택 허용)
-- Jira API 권한: classic `read:jira-work`, `write:jira-work`만 허용
+- 토큰 이름: `DodamDodam GitHub Issue Sync v2`
+- Jira API 권한: scoped token의 classic `read:jira-work`,
+  `write:jira-work`만 허용
 - 만료일: `2027-08-21`
 - 만료 전 새 토큰을 만든 뒤 동일 Secret 값을 교체하고 테스트 Issue로 확인합니다.
 - Secret 값은 로그·문서·로컬 파일에 기록하지 않습니다.
+- 새 토큰으로 네 저장소 생성과 재시도를 확인한 뒤 기존 토큰은 철회했습니다.
 
 Jira 업무 유형 ID는 프로젝트 설정에서 확인한 Epic `10001`, Task `10003`, Bug
 `10006`으로 고정합니다. Jira 표시 언어가 바뀌어도 API 생성이 깨지지 않도록
@@ -125,6 +144,57 @@ Jira 업무 유형 ID는 프로젝트 설정에서 확인한 Epic `10001`, Task 
 
 추후 검토할 GitHub 설정은 Organization Project에 `Parent issue`,
 `Sub-issue progress`, `Repository`, `Status` field를 추가하는 것입니다.
+
+## 팀과 권한 구조
+
+팀원 초대 전에는 빈 팀을 저장소 개수에 맞춰 미리 만들지 않습니다. 실제 담당과
+중복 역할을 확인한 뒤 팀원을 먼저 Organization 및 Jira에 초대하고 다음 최소
+구조를 적용합니다.
+
+### GitHub Teams
+
+| 팀 | 기본 저장소 권한 | 용도 |
+| --- | --- | --- |
+| `frontend` | frontend `Write` | Frontend 개발과 리뷰 |
+| `backend` | backend `Write` | Backend 개발과 리뷰 |
+| `ai` | ai `Write` | AI 개발과 리뷰 |
+| `integration-maintainers` | integration `Write` | 통합 설정과 Docker 검증 |
+| `maintainers` | 네 저장소 `Maintain` | 신뢰할 수 있는 2명 이상이 생길 때만 생성 |
+
+저장소가 public이어도 공개되는 것은 읽기 권한뿐입니다. 쓰기 권한, 팀 mention,
+CODEOWNERS와 팀 리뷰 배정에는 GitHub Teams가 유용합니다. 팀은 visible로 만들고,
+각 도메인 팀에 대응 저장소만 직접 부여합니다. 현재 규모에서는 parent/child
+GitHub Team을 만들지 않습니다. child team이 parent의 저장소 권한을 상속하므로
+소규모 조직에서는 의도하지 않은 권한 확대가 발생하기 쉽습니다.
+
+팀원이 한 명뿐인 팀에는 자동 리뷰 배정을 켜지 않습니다. 두 명 이상일 때
+CODEOWNERS를 추가하고 load-balance 방식으로 한 명을 자동 요청합니다. Owner와
+Admin은 비상 설정을 담당할 1~2명으로 제한하고 일반 개발자는 `Write`, 릴리스
+관리자는 필요한 경우에만 `Maintain`을 사용합니다. 브랜치 Ruleset이
+`main`·`development` 직접 push를 별도로 차단하므로 `Write` 부여가 보호 브랜치
+우회를 의미하지 않습니다.
+
+### Jira/Atlassian Teams
+
+권장 구조는 parent `DodamDodam Capstone` 아래 `Frontend`, `Backend`, `AI`
+subteam입니다. `Integration/Platform`은 전담 인원이 2명 이상 생겼을 때만
+추가합니다. Jira Team은 업무의 책임 그룹을 표현하는 용도이며 보안 권한 경계가
+아닙니다. Jira 접근 권한은 Atlassian Group과 Jira project role로 별도
+관리하고, 일반 팀은 invite-only 또는 closed로 운영합니다.
+
+Jira Team을 만들기만 해서는 업무가 자동 배정되지 않습니다. 실제 적용할 때는
+다음 순서를 지킵니다.
+
+1. SCRUM 화면에 `Team` field를 추가합니다.
+2. 저장소와 Jira Team ID의 매핑을 GitHub Issue 동기화 workflow에 추가합니다.
+3. 기존 SCRUM 업무의 Team 값을 모두 보정합니다.
+4. 그 뒤에 Team별 Board·Gantt filter를 적용합니다.
+
+`Assignee`는 실제 담당 개인, `Team`은 책임 그룹으로 사용합니다. 기존
+`[FE]`·`[BE]`·`[AI]`·`[INT]` 제목 접두사는 Slack과 검색 식별을 위해 그대로
+유지합니다. 기존 업무를 보정하기 전에 Team filter를 켜면 Team 값이 빈 업무가
+Gantt에서 사라진 것처럼 보일 수 있습니다. 팀 구조와 완료 업무 보존은 별개이며,
+완료 업무는 `Done` 상태와 `Show completed tickets` 설정으로 계속 표시합니다.
 
 ## GitHub for Atlassian 연결
 
@@ -281,7 +351,7 @@ integration build 결과를 함께 추적할 수 있습니다.
 ## Smart Commit 사용 원칙
 
 Jira Smart Commit은 `SCRUM-2 #done` 같은 상태 변경 명령을 지원합니다. 하지만
-현재 저장소는 squash merge를 사용하며, Atlassian은 commit history가
+기능 변경은 `development`로 squash merge하며, Atlassian은 commit history가
 재작성되면 Smart Commit 명령이 중복 실행될 수 있다고 안내합니다.
 
 따라서 commit의 Jira key는 개발 정보 연결에만 사용하고, 상태 변경은 PR
@@ -297,7 +367,7 @@ event 기반 Jira Automation으로 처리합니다.
 4. [완료] PR template과 Jira key 검사 workflow 반영
 5. [완료] `development` merge 시 GitHub Issue 종료 workflow 반영
 6. [완료] frontend/backend/ai/integration 기능 PR과 CI 연결 검증
-7. [검토] Jira Branch/PR Automation으로 업무 상태 자동 전환
+7. [완료] Jira PR merge Automation으로 Task 상태를 `완료`로 전환
 8. [검토] GitHub Organization Project에 sub-issue 관련 field 추가
 9. [검토] 필요할 때 Organization Issue Type에 `Epic` 추가
 
@@ -322,9 +392,11 @@ Team Board Gantt는 Jira의 상위 항목 관계를 읽어 Epic과 Task를 자�
 
 완료 업무가 사라져 보였던 원인은 Team Board Gantt의 `View Settings`에서
 `Show completed tickets`가 꺼져 있었기 때문입니다. 이 옵션을 활성화하고 새로
-고침한 뒤 `SCRUM-1`~`SCRUM-10` 총 10개 업무가 유지되며 완료된 9개 업무가
-`완료` 상태로 표시되는 것을 재검증했습니다. 이 옵션을 끄면 데이터가 삭제되는
-것이 아니라 현재 Gantt View에서만 숨겨집니다.
+고침한 뒤 최초 `SCRUM-1`~`SCRUM-10` 총 10개 업무가 유지되며 완료된 9개 업무가
+`완료` 상태로 표시되는 것을 재검증했습니다. Issue Form 종단간 테스트로
+`SCRUM-11`~`SCRUM-14`를 추가한 뒤에도 Gantt가 `14/14 work items`를 표시해
+완료 9개와 진행 전 5개를 함께 보존하는 것을 확인했습니다. 이 옵션을 끄면
+데이터가 삭제되는 것이 아니라 현재 Gantt View에서만 숨겨집니다.
 
 일정 막대를 사용하려면 다음 항목을 입력합니다.
 

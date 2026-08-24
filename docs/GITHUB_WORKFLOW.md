@@ -29,17 +29,19 @@ feature/* 또는 fix/* -> development -> main
 가집니다. 두 보호 브랜치는 force push와 삭제를 차단합니다. 다른 브랜치는
 수동으로 삭제할 수 있지만 merge 후 자동 삭제하지 않습니다.
 
-`development`는 장기간 유지하지만 `main` 승격은 squash merge하므로 두
-브랜치의 commit 계보가 달라질 수 있습니다. 승격이 완료되면 release 관리자는
-PR head 이후 `development`에 새 commit이 없는지, 승격할 파일 변경이 모두
-`main`에 있는지 확인한 후 `development`를 결과 `main` commit과 일치시켜야
-합니다. 이 절차는 linear history를 유지하면서 다음 승격의 반복 충돌을
-방지합니다. 다른 변경이 `development`에 반영 중일 때는 정렬 작업을 하면 안
-됩니다.
+작업 브랜치 → `development`는 squash merge하여 기능 변경을 한 commit으로
+정리합니다. `development` → `main`은 merge commit을 사용하여 두 장기 브랜치의
+계보를 보존합니다. 이 방식은 승격 때마다 두 브랜치가 반복 충돌하는 것을
+방지합니다.
 
 Dependabot의 GitHub Actions 갱신 PR도 `main`이 아니라 `development`를 대상으로
 생성합니다. Bot PR은 Jira 키만 예외이며 Gitmoji, 저장소별 CI, 사람 승인 규칙은
 동일하게 적용합니다.
+
+2026-08-22 초기 승격에서 두 보호 branch에 동일 변경을 각각 squash하여 공통
+계보가 끊긴 상태를 발견했습니다. 기존 commit을 삭제하는 force push나 보호
+branch 직접 push를 사용하지 않고, 분리한 Ruleset과 보호된 동기화 PR로 `main`
+계보를 `development`에 한 번 연결합니다.
 
 ## PR 제목
 
@@ -70,14 +72,16 @@ Gitmoji와 type을 의미상 고정해 연결하지 않습니다. 허용하는 t
 - target branch의 최신 변경 반영
 - 저장소별 quality CI 통과
 - `gitmoji-conventional-title` 통과
-- squash merge만 허용
+- 대상 branch에 맞는 병합 방식 사용: `development`는 squash,
+  `main`은 merge commit
 
 ## 컴포넌트 승격
 
 `frontend`, `backend`, `ai`의 변경이 `main`에 merge되면 integration 저장소에
-`component-main-updated` event를 전송합니다. Integration Bot은
-`components.lock.json`의 해당 항목을 갱신합니다. 같은 컴포넌트의 PR이 이미
-열려 있으면 기존 Bot branch를 재사용하고 squash auto-merge를 활성화합니다.
+`component-main-updated` event를 전송합니다. Integration Bot은 integration의
+`development`에서 `components.lock.json`의 해당 항목을 갱신합니다. 같은
+컴포넌트의 PR이 이미 열려 있으면 기존 Bot branch를 재사용하고 squash
+auto-merge를 활성화합니다.
 단, 필수 검사와 사람의 승인을 통과하기 전에는 merge되지 않습니다.
 
 수신 workflow는 component, repository, 전체 SHA, source workflow URL 형식을
