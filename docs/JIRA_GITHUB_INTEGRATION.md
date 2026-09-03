@@ -271,7 +271,9 @@ hotfix/SCRUM-4-auth-failure
 현재 Gitmoji 제목 검사는 위 형식을 허용합니다. `jira-issue-key` workflow는
 기능 PR의 branch와 제목에 정확히 하나의 같은 Jira key가 있는지 검사하며,
 `development` 대상 PR에는 저장소별 `[FE]`, `[BE]`, `[AI]`, `[INT]` 접두어도
-요구합니다. Dependabot과 Integration Bot branch는 명시적으로 예외 처리합니다.
+요구합니다. `main` 대상 PR은 `development`에서만 허용합니다. Dependabot과
+Integration Bot branch도 이 branch 방향 규칙은 예외가 아니며, Jira 키 검사만
+명시적으로 건너뜁니다.
 
 ## 업무 상태 자동화
 
@@ -334,7 +336,7 @@ PR merge to development
 
 - `pull_request_target`의 `closed` event 사용
 - `merged == true` 확인
-- target이 `development` 또는 허용된 hotfix의 `main`인지 확인
+- target이 `development`이거나 source가 `development`인 `main` 승격인지 확인
 - 최소 권한인 `issues: write`, `pull-requests: read`만 사용
 - PR code checkout 및 실행 금지
 - PR 템플릿의 HTML 주석과 code block 안에 있는 `Resolves #123` 예시는 무시
@@ -345,6 +347,8 @@ PR merge to development
 ## Release Epic 연결
 
 `development` → `main` 승격 PR에는 sprint 또는 release Epic key를 사용합니다.
+긴급 수정도 작업 branch에서 `development`로 먼저 병합한 뒤 같은 승격 PR을
+사용합니다.
 
 ```text
 🚀 chore(release): SCRUM-1 development를 main으로 승격

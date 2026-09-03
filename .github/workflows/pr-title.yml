@@ -2,6 +2,8 @@ name: PR Title
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
+  merge_group:
+    types: [checks_requested]
 permissions:
   contents: read
 jobs:
@@ -12,7 +14,12 @@ jobs:
     env:
       PR_TITLE: ${{ github.event.pull_request.title }}
     steps:
+      - name: Merge queue compatibility
+        if: github.event_name == 'merge_group'
+        run: echo "PR title was validated before the pull request entered the merge queue."
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.event_name == 'pull_request'
         with:
           persist-credentials: false
-      - run: python3 .github/scripts/validate_pr_title.py
+      - if: github.event_name == 'pull_request'
+        run: python3 .github/scripts/validate_pr_title.py

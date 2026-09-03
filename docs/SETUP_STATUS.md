@@ -1,6 +1,6 @@
 # 초기 설정 상태와 추후 검토 사항
 
-최종 검토일: 2026-08-24
+최종 검토일: 2026-09-03
 
 ## GitHub 초기 설정
 
@@ -15,6 +15,10 @@
 - [x] 저장소별 quality 검사를 필수 검사로 등록
 - [x] Integration Bot을 정확히 네 저장소에 설치
 - [x] 컴포넌트 `main` merge 시 integration PR 생성 또는 갱신
+- [x] 네 저장소의 `main` 대상 PR source를 `development`로 제한
+- [x] Integration component SHA의 실제 `main` 계보 검증
+- [x] 누락·뒤처진 component Bot PR 정기 복구
+- [x] Integration `development` merge queue 및 `merge_group` 검사 구성
 
 ### 적용 식별자
 
@@ -31,8 +35,9 @@
 GitHub App에는 저장소 metadata read, Contents read/write, Pull Requests
 read/write 권한이 있습니다. App webhook은 비활성화되어 있습니다. 공개 Client
 ID는 workflow에 기록하고 private key만 저장소 Actions secret으로 보관하며
-private key를 commit하지 않았습니다. 생성되는 installation token은 integration
-한 저장소와 현재 단계에 필요한 contents/pull request 권한으로 제한합니다.
+private key를 commit하지 않았습니다. 생성되는 installation token은 component
+조회 전용과 integration 쓰기 전용으로 분리하고 각 단계에 필요한
+contents/pull request 권한으로 제한합니다.
 
 ## Slack 설정
 
@@ -95,9 +100,10 @@ Slack App은 `DodamDodam GitHub Actions` (`A0BRVD5EF0S`)입니다. 각 공개
   [#12](https://github.com/DodamDodam-Capstone/integration/pull/12). 각 PR을 최신
   integration `main`에 맞춘 후 build, 승인, merge를 완료했습니다.
 - `components.lock.json`에는 컴포넌트의 정확한 merge commit을 기록합니다.
-  현재 frontend `a7891d2d4ee2049e6c123f1049aa2e04fd635428`, backend
-  `91a11b309940b4efaafef11508e0fe0b86789b13`, AI
-  `a8fb5fd878953a62859df27c3205f3d920cd4ce0`입니다.
+  2026-09-03 정리 기준 frontend
+  `0deae43c2fab32e15eb52cf5ce91f7b60c2afc99`, backend
+  `bcf45584591bc2b657b68cd6ac28b5611950ef56`, AI
+  `3150ab18d89bbcf05d9d6e71d94684b3f555735b`입니다.
 - 컴포넌트 승격은 integration PR을 생성하지만, integration 저장소의 승격은
   자기 자신을 대상으로 하는 PR을 생성하지 않습니다.
 
@@ -195,15 +201,15 @@ Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습�
 
 ### 인수인계 기준 상태
 
-- [ ] 초기 독립 squash로 끊긴 main/development 계보를 force push 없이
-      보호된 PR로 보존·정렬. Ruleset 분리 후 준비된 동기화 PR로 처리합니다.
+- [x] 초기 독립 squash로 끊긴 main/development 계보를 force push 없이
+      보호된 merge PR로 보존·정렬
 
 - [x] 초기 Dependabot major Action 갱신 PR을 merge하지 않고 종료
 - [x] 더 이상 필요하지 않은 설정 및 승격 test PR 종료
-- [ ] Component Bot PR merge 후 임시 branch 수동 삭제
+- [x] 오래된 Component Bot PR을 닫고 임시 branch 수동 삭제
 - [x] source branch 자동 삭제 비활성화 유지
-- [ ] 모든 저장소에 `main`, `development`만 유지
-- [ ] 모든 저장소의 열린 PR 0개 확인
+- [x] 작업 완료 후 모든 저장소에 `main`, `development`만 유지
+- [x] 작업 완료 후 모든 저장소의 열린 PR 0개 확인
 
 ## 각 프로젝트 초기화 시 확인할 항목
 

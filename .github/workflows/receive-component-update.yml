@@ -35,21 +35,44 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
 
-      - name: Checkout integration repository
+      - name: Create component read token
+        id: source-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: Iv23liyibAu0H0gOIi2f
+          private-key: ${{ secrets.INTEGRATION_APP_PRIVATE_KEY }}
+          owner: DodamDodam-Capstone
+          repositories: |
+            frontend
+            backend
+            ai
+          permission-contents: read
+
+      - name: Checkout trusted automation revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: .automation
+          persist-credentials: false
+
+      - name: Checkout integration development worktree
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
           ref: development
+          path: .worktree
 
       - name: Validate event and update component lock
         id: update-lock
+        working-directory: .worktree
         run: |
-          python3 scripts/component_lock.py update \
+          python3 ../.automation/scripts/component_lock.py update \
             --component "$COMPONENT" \
             --repository "$SOURCE_REPOSITORY" \
             --sha "$SOURCE_SHA" \
-            --run-url "$SOURCE_RUN_URL"
+            --run-url "$SOURCE_RUN_URL" \
+            --lock-path components.lock.json
           if git diff --quiet -- components.lock.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
@@ -65,7 +88,8 @@ jobs:
         if: steps.update-lock.outputs.changed == 'true'
         id: source-head
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+        working-directory: .worktree
         run: |
           CURRENT_SHA=$(gh api "repos/$SOURCE_REPOSITORY/commits/main" --jq .sha)
           if [[ "$CURRENT_SHA" == "$SOURCE_SHA" ]]; then
@@ -82,6 +106,7 @@ jobs:
         env:
           BRANCH: bot/update-${{ github.event.client_payload.component }}
           VALID_JIRA_KEY: ${{ steps.update-lock.outputs.jira_key }}
+        working-directory: .worktree
         run: |
           git config user.name "DodamDodam Integration Bot"
           git config user.email "integration-bot@users.noreply.github.com"
@@ -99,6 +124,7 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           BRANCH: bot/update-${{ github.event.client_payload.component }}
           VALID_JIRA_KEY: ${{ steps.update-lock.outputs.jira_key }}
+        working-directory: .worktree
         run: |
           TITLE="⬆️ deps($COMPONENT): ${VALID_JIRA_KEY:+$VALID_JIRA_KEY }update component to ${SOURCE_SHA:0:7}"
           BODY=$(printf '%s\n' \
@@ -109,7 +135,7 @@ jobs:
             "- 커밋: $SOURCE_SHA" \
             "- Jira: ${VALID_JIRA_KEY:-없음}" \
             "- 대상 브랜치: $TARGET_BRANCH" \
-            "- 소스 workflow: $SOURCE_RUN_URL" \
+            "- 트리거 workflow: $SOURCE_RUN_URL" \
             '' \
             'Gitmoji 제목 검사와 전체 integration CI를 통과해야 병합할 수 있습니다.')
           PR_NUMBER=$(gh pr list --head "$BRANCH" --base "$TARGET_BRANCH" --state open --json number --jq '.[0].number')

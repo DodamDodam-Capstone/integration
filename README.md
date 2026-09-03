@@ -4,6 +4,8 @@ DodamDodam frontend, backend, AI 서비스의 통합 상태를 관리하는 저�
 
 각 컴포넌트의 정확한 commit SHA를 기록하고 Docker Compose build를
 검증합니다. 컴포넌트 source code를 이 저장소에 복사하지 않습니다.
+따라서 각 서비스의 README와 문서는 해당 저장소에 그대로 유지되며 서로
+덮어쓰지 않습니다.
 
 GitHub Ruleset, 저장소별 CI, Integration Bot, 저장소별 Slack 알림을 적용하고
 전체 흐름을 검증했습니다. 애플리케이션 runtime 버전과 Docker build 정의는
@@ -11,8 +13,14 @@ GitHub Ruleset, 저장소별 CI, Integration Bot, 저장소별 Slack 알림을 �
 
 Integration 기능 변경과 컴포넌트 잠금 갱신은 `development`로 squash
 merge합니다. 검증된 `development`는 보호된 PR과 사람의 승인을 거쳐 merge
-commit으로 `main`에 승격합니다. 이 저장소의 자체 merge는 다시 integration
-PR을 생성하지 않습니다.
+commit으로 `main`에 승격합니다. `main` 대상 PR의 source branch는
+`development`만 허용합니다. 이 저장소의 자체 merge는 다시 integration PR을
+생성하지 않습니다.
+
+Integration CI는 잠긴 SHA가 각 서비스 `main` 이력에 속하는지 검증합니다.
+누락되거나 뒤처진 Bot PR은 `Component Reconcile` workflow가 복구하고,
+`development`의 여러 컴포넌트 PR은 merge queue에서 최신 조합으로 순차
+검증합니다.
 
 문서:
 
