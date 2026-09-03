@@ -176,6 +176,12 @@ PR:     👷 ci(compose): SCRUM-204 [INT] 인증 서비스 통합 검사 추가
 6. 필수 CI, 리뷰 승인, conversation 해결 후 squash merge합니다.
 7. `development`에서 `main`으로 올리는 sprint/release PR은 Epic 키를 사용하고
    merge commit으로 병합합니다.
+8. `main` 대상 PR은 `development`에서만 생성하며 hotfix도 먼저
+   `development`에 반영합니다.
+
+Integration Bot PR이 여러 개 열리면 merge queue가 최신 `development`와의
+조합을 하나씩 다시 검사합니다. Bot branch를 직접 합치거나 lock 파일을 다른
+서비스 파일과 함께 복사하지 않습니다.
 
 ```text
 🚀 chore(release): SCRUM-200 development를 main으로 승격
