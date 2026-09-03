@@ -3,6 +3,8 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [main, development]
+  merge_group:
+    types: [checks_requested]
 permissions:
   contents: read
 concurrency:
@@ -26,8 +28,22 @@ jobs:
       - name: Validate component lock
         id: versions
         run: python3 scripts/component_lock.py validate --github-output
+      - name: Validate component commit provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.head_ref }}
+        shell: bash
+        run: |
+          if [[ "$HEAD_REF" =~ ^bot/update-(frontend|backend|ai)$ ]]; then
+            python3 scripts/component_lock.py verify \
+              --exact-component "${BASH_REMATCH[1]}"
+          else
+            python3 scripts/component_lock.py verify
+          fi
       - name: Test component lock helper
         run: python3 scripts/test_component_lock.py
+      - name: Test component reconciliation helper
+        run: python3 scripts/test_reconcile_components.py
       - name: Detect Compose configuration
         id: compose
         shell: bash

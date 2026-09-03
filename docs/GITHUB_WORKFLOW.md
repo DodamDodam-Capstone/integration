@@ -1,6 +1,6 @@
 # GitHub 협업 및 CI 흐름
 
-최종 검토일: 2026-08-22
+최종 검토일: 2026-09-03
 
 ## 저장소 역할
 
@@ -21,8 +21,8 @@ revision을 정확히 checkout합니다.
 feature/* 또는 fix/* -> development -> main
 ```
 
-긴급 수정은 `main`에서 hotfix branch를 생성하고 `main`에 merge한 다음
-`development`에도 반영합니다.
+`main` 대상 PR의 source branch는 반드시 `development`여야 합니다. 긴급 수정도
+hotfix branch를 먼저 `development`에 반영한 뒤 정상 승격 경로를 따릅니다.
 
 모든 저장소에서 `main`과 `development`를 보호합니다. 관리자가 아닌 사용자는
 반드시 PR을 사용해야 하며, 저장소 관리자는 긴급 상황을 위한 우회 권한을
@@ -88,6 +88,26 @@ auto-merge를 활성화합니다.
 검증하며, 이벤트 SHA가 해당 저장소의 현재 `main`과 다르면 오래된 이벤트로
 판단해 PR을 만들지 않습니다. Integration Bot secret이 없으면 성공으로
 건너뛰지 않고 workflow를 실패시켜 설정 손상을 Slack에 드러냅니다.
+신뢰된 수신·복구 workflow는 component 조회 전용 App token과 integration
+쓰기 전용 App token을 분리해 사용하므로 component 저장소가 비공개로 전환되어도
+같은 흐름을 유지합니다.
+
+Integration CI는 lock에 기록한 SHA가 각 component 저장소 `main` 이력에 실제로
+속하는지 GitHub API로 검증합니다. Bot PR에서 갱신하는 component는 당시 최신
+`main`과 정확히 일치해야 합니다. 다른 component는 현재 `main`과 같거나 그
+조상 commit이어야 하므로 임의 SHA나 다른 branch의 commit은 병합할 수 없습니다.
+
+`Component Reconcile` workflow는 integration의 `development` 또는 `main`이
+갱신될 때와 매일 03:17 KST에 세 component의 최신 `main`을 다시 비교합니다.
+누락된 dispatch, 오래되어 뒤처진 Bot branch, 닫히거나 사라진 Bot PR을 발견하면
+동일한 `component-main-updated` event를 다시 보내 최신 PR로 복구합니다.
+수신 workflow는 실행 코드와 `development` 작업 tree를 분리해, default branch와
+작업 branch의 helper 버전 차이 때문에 잘못된 파일을 갱신하지 않도록 합니다.
+
+integration의 `development`에는 merge queue를 사용합니다. 필수 CI와 정책
+workflow는 `merge_group` event에서도 같은 check 이름을 보고하므로, frontend와
+backend처럼 여러 Bot PR이 동시에 승인되어도 최신 `development`를 기준으로
+차례대로 재검증하고 병합합니다.
 
 ## 개발 환경 버전
 
