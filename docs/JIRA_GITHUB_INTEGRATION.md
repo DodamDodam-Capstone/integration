@@ -4,7 +4,7 @@
 [`TEAM_WORKFLOW_GUIDE.md`](TEAM_WORKFLOW_GUIDE.md)에 정리합니다. 이 문서는
 관리자용 자동화·권한·복구 기준을 설명합니다.
 
-최종 검토일: 2026-08-24
+최종 검토일: 2026-09-08
 
 ## 적용 상태
 
@@ -18,7 +18,8 @@
 - 네 저장소에 `jira-issue-key` 및 `close-linked-issues` workflow 추가
 - 컴포넌트의 Jira key를 integration Bot PR까지 전달하도록 적용
 - Jira Automation `PR 병합 시 Task 완료` 활성화 및 실제 완료 흐름 검증
-- GitHub Issue Form에서 Jira Epic·Task·Bug 자동 생성 workflow 추가
+- GitHub Issue Form과 `jira-sync` 레이블에서 Jira Epic·Task·Bug 자동 생성
+  workflow 추가
 - 조직 Actions Secret `JIRA_API_TOKEN`을 최소 Jira scope 토큰으로 교체하고
   기존 토큰 철회 및 종단간 재검증 완료
 
@@ -95,8 +96,9 @@ GitHub sub-issue는 같은 Organization 소유자의 다른 저장소 Issue를 �
 열지 않습니다.
 
 ```text
-GitHub Issue opened
--> 저장소/레이블로 [FE]·[BE]·[AI]·[INT]·[EPIC]과 업무 유형 결정
+신뢰된 작성자가 GitHub Issue opened
+또는 팀원이 검토 후 jira-sync 레이블 추가
+-> 저장소/유형 레이블로 [FE]·[BE]·[AI]·[INT]·[EPIC]과 업무 유형 결정
 -> Jira SCRUM 업무 생성
 -> GitHub Issue 제목에 Jira 키 추가
 -> Jira 링크 댓글과 jira-linked 레이블 추가
@@ -110,9 +112,12 @@ Task·Bug를 기존 Epic 아래에 둘 때 Form의 `상위 Jira 키`에 `SCRUM-6
 
 저장소가 public이므로 외부 사용자가 Issue만 열어 내부 Jira 업무를 무제한
 생성하지 못하도록 `OWNER`, `MEMBER`, `COLLABORATOR`가 만든 Issue만 자동
-동기화합니다. 외부 Issue는 팀원이 검토한 뒤 `Run workflow`에 번호를 입력해
-수동 승인합니다. Jira 연결 완료는 `jira-linked`, Slack 성공 알림 완료는
-`jira-notified` 레이블로 구분합니다.
+동기화합니다. GitHub가 팀원을 `CONTRIBUTOR` 또는 `NONE`으로 분류했거나 외부
+사용자가 연 Issue는 팀원이 내용을 검토한 뒤 `jira-sync` 레이블을 추가해
+승인·동기화합니다. 이 레이블은 저장소의 Issue 레이블을 관리할 수 있는 팀원만
+추가하며, `task`, `bug`, `epic` 유형 레이블과 상위 Jira 키를 먼저 확인합니다.
+Jira 연결 완료는 `jira-linked`, Slack 성공 알림 완료는 `jira-notified`
+레이블로 구분합니다.
 
 자동 동기화에서 GitHub가 원본이며, Jira가 sprint·일정·담당자·상태의 원본입니다.
 생성 이후 Jira 제목/설명의 양방향 자동 덮어쓰기는 하지 않습니다. 이는 사람이
@@ -125,14 +130,17 @@ Jira에서 보완한 계획 정보가 GitHub 수정으로 사라지는 것을 �
   재사용합니다. 제목에 Jira 키가 있더라도 해당 고유 레이블과 프로젝트가
   일치하지 않으면 임의의 기존 업무에 연결하지 않습니다.
 - 실패 알림은 저장소별 Slack Actions 채널에 전송됩니다.
+- 자동 실행이 건너뛰어진 Issue는 내용을 검토한 뒤 `jira-sync` 레이블을
+  추가합니다. 이미 레이블이 있다면 제거 후 다시 추가해 재실행할 수 있습니다.
 - Actions의 `GitHub Issue to Jira`에서 `Run workflow`를 선택하고 Issue 번호를
-  입력하면 수동 재시도할 수 있습니다.
+  입력하면 수동 재시도할 수 있습니다. 수동 실행 target은 반드시 `main`입니다.
 - 중앙 실행 코드는 `integration/.github/scripts/sync_github_issue_to_jira.py`이며
   컴포넌트 저장소 workflow는 검증한 integration commit SHA를 사용합니다.
   따라서 이후 `integration/main`이 바뀌어도 secret을 사용하는 실행 코드가
   예고 없이 바뀌지 않습니다. 중앙 helper를 수정하면 단위 테스트와 integration
   CI를 통과시킨 뒤 세 컴포넌트의 고정 SHA를 함께 갱신합니다.
-- 수동 재시도는 `main`에서만 허용하고 Issue 번호는 양의 정수만 받습니다.
+- 수동 재시도는 검증된 workflow와 secret만 사용하도록 `main`에서만 허용하고
+  Issue 번호는 양의 정수만 받습니다.
 - `epic`, `task`, `bug` 레이블이 충돌하면 임의로 유형을 선택하지 않고 실패
   알림을 보냅니다.
 - Jira 생성, GitHub 제목 변경, 링크 댓글, Slack 알림 중간에 실패해도 고유 Jira
