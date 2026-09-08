@@ -163,6 +163,16 @@ frontend#15를 반복 실행해 Jira와 댓글이 중복되지 않는 것도 확
 연결 레이블을 만들지 않고 성공 종료하는 것을 확인한 뒤 테스트 Issue를
 닫았습니다.
 
+2026-09-08에는 수동 `Run workflow` 없이 `jira-sync` 레이블만 추가하는 경로를
+네 저장소에서 다시 검증했습니다. `task` 레이블만 붙여 생성한 Issue의 `opened`
+실행은 작성자 association이 `CONTRIBUTOR` 또는 `NONE`이라 의도대로 건너뛰었고,
+이후 `jira-sync`를 추가하자 ai#32 → `SCRUM-19`, backend#26 → `SCRUM-20`,
+frontend#26 → `SCRUM-21`, integration#63 → `SCRUM-22`가 생성되었습니다.
+각 Issue에서 SCRUM 키가 포함된 제목, Jira 링크 댓글, `jira-linked`,
+`jira-notified` 레이블과 workflow 성공을 확인했습니다. 따라서 수동 실행과
+target `main` 선택 없이도 검토자가 레이블 하나로 Jira 생성과 Slack 알림을
+완료할 수 있습니다.
+
 검증에 사용한 기능 PR은
 [frontend #10](https://github.com/DodamDodam-Capstone/frontend/pull/10),
 [backend #9](https://github.com/DodamDodam-Capstone/backend/pull/9),
@@ -297,9 +307,9 @@ Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습�
 
 ## 즉시 검토할 항목
 
-- [ ] `frontend`, `backend`, `ai`, `integration`에 `jira-sync` 레이블을 만들고
+- [x] `frontend`, `backend`, `ai`, `integration`에 `jira-sync` 레이블을 만들고
       설명을 `검토된 GitHub Issue를 Jira SCRUM 업무로 생성·연결`로 통일합니다.
-- [ ] 네 저장소의 `labeled` workflow 변경을 `main`에 반영한 뒤
+- [x] 네 저장소의 `labeled` workflow 변경을 `main`에 반영한 뒤
       `CONTRIBUTOR` 또는 `NONE` 작성자 Issue에서 `jira-sync` 추가만으로 Jira
       생성, GitHub 제목 변경, 링크 댓글과 Slack 알림까지 확인합니다.
 - [ ] 새 Dependabot PR이 생성되면 검토합니다. Dependabot은 `development`를
