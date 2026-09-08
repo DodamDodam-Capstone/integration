@@ -1,0 +1,67 @@
+name: Component Reconcile
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [development, main]
+  schedule:
+    - cron: "17 18 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: component-reconcile
+  cancel-in-progress: true
+
+jobs:
+  reconcile:
+    name: reconcile-component-locks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Create component read token
+        id: source-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: Iv23liyibAu0H0gOIi2f
+          private-key: ${{ secrets.INTEGRATION_APP_PRIVATE_KEY }}
+          owner: DodamDodam-Capstone
+          repositories: |
+            frontend
+            backend
+            ai
+          permission-contents: read
+
+      - name: Create Integration Bot token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: Iv23liyibAu0H0gOIi2f
+          private-key: ${{ secrets.INTEGRATION_APP_PRIVATE_KEY }}
+          owner: DodamDodam-Capstone
+          repositories: integration
+          permission-contents: write
+          permission-pull-requests: read
+
+      - name: Checkout trusted automation revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: .automation
+          persist-credentials: false
+
+      - name: Checkout integration development lock
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: development
+          path: .worktree
+          persist-credentials: false
+
+      - name: Reconcile component main revisions
+        env:
+          GH_SOURCE_TOKEN: ${{ steps.source-token.outputs.token }}
+          GH_INTEGRATION_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: >-
+          python3 .automation/scripts/reconcile_components.py
+          --lock-path .worktree/components.lock.json

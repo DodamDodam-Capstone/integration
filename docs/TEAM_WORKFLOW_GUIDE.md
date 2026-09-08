@@ -89,10 +89,14 @@ Title:      [FE] 로그인 오류 메시지 개선
 상위 Jira 키: SCRUM-200
 ```
 
-Issue가 열리면 자동화가 다음을 처리합니다.
+Issue가 열리면 신뢰된 작성자는 바로 동기화됩니다. Jira 키가 붙지 않으면 팀원이
+Issue의 유형과 내용을 검토한 뒤 `jira-sync` 레이블을 추가합니다. 레이블 추가만으로
+`GitHub Issue to Jira` workflow가 실행되며 별도의 `Run workflow`는 필요하지
+않습니다.
 
 ```text
 frontend GitHub Issue 생성
+-> 필요하면 jira-sync 레이블 추가
 -> Jira에 [FE] Task 생성, parent=SCRUM-200
 -> GitHub Issue 제목을 SCRUM-205 [FE] ... 형식으로 변경
 -> Jira 링크 댓글 추가
@@ -101,6 +105,9 @@ frontend GitHub Issue 생성
 ```
 
 `SCRUM-205`와 GitHub Issue 번호는 예시이며 실제 자동 생성 결과를 확인합니다.
+`jira-sync`를 붙이기 전에 `task` 또는 `bug` 유형 레이블과 `상위 Jira 키`를 먼저
+확인합니다. 실패 재시도는 `jira-sync`를 제거한 뒤 다시 추가하거나 Actions에서
+`main`을 선택하고 Issue 번호를 입력합니다.
 
 ### 4.2 자동 생성된 키로 작업합니다
 
@@ -176,6 +183,12 @@ PR:     👷 ci(compose): SCRUM-204 [INT] 인증 서비스 통합 검사 추가
 6. 필수 CI, 리뷰 승인, conversation 해결 후 squash merge합니다.
 7. `development`에서 `main`으로 올리는 sprint/release PR은 Epic 키를 사용하고
    merge commit으로 병합합니다.
+8. `main` 대상 PR은 `development`에서만 생성하며 hotfix도 먼저
+   `development`에 반영합니다.
+
+Integration Bot PR이 여러 개 열리면 merge queue가 최신 `development`와의
+조합을 하나씩 다시 검사합니다. Bot branch를 직접 합치거나 lock 파일을 다른
+서비스 파일과 함께 복사하지 않습니다.
 
 ```text
 🚀 chore(release): SCRUM-200 development를 main으로 승격
