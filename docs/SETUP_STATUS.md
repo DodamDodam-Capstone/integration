@@ -1,6 +1,6 @@
 # 초기 설정 상태와 추후 검토 사항
 
-최종 검토일: 2026-09-03
+최종 검토일: 2026-09-08
 
 ## GitHub 초기 설정
 
@@ -297,6 +297,11 @@ Jira에서는 branch, commit, 열린 PR 및 성공한 build가 연결되었습�
 
 ## 즉시 검토할 항목
 
+- [ ] `frontend`, `backend`, `ai`, `integration`에 `jira-sync` 레이블을 만들고
+      설명을 `검토된 GitHub Issue를 Jira SCRUM 업무로 생성·연결`로 통일합니다.
+- [ ] 네 저장소의 `labeled` workflow 변경을 `main`에 반영한 뒤
+      `CONTRIBUTOR` 또는 `NONE` 작성자 Issue에서 `jira-sync` 추가만으로 Jira
+      생성, GitHub 제목 변경, 링크 댓글과 Slack 알림까지 확인합니다.
 - [ ] 새 Dependabot PR이 생성되면 검토합니다. Dependabot은 `development`를
       대상으로 하며 Jira 키만 예외이고 CI와 사람 승인은 그대로 필요합니다.
 - [ ] 설정 인수인계 승인 후 휴지통에 남아 있는 복구 가능한 GitHub App
