@@ -359,7 +359,7 @@ PR merge to development
 - PR 템플릿의 HTML 주석과 code block 안에 있는 `Resolves #123` 예시는 무시
 - 연결 번호가 GitHub Pull Request이면 닫지 않고, 열린 같은 저장소 Issue만 완료
 - 검증한 중앙 helper를 변경 불가능한 commit SHA로 checkout
-- Dependabot, Integration Bot, release PR 제외
+- release PR은 대상 브랜치 조건으로 제외
 
 이 workflow는 네 저장소 모두 `development` 대상 병합에서만 Issue를 닫습니다.
 GitHub 기본 동작은 `main` 병합 시 종료 키워드로 Issue를 닫을 수 있으므로,
