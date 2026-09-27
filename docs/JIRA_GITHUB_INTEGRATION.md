@@ -4,7 +4,7 @@
 [`TEAM_WORKFLOW_GUIDE.md`](TEAM_WORKFLOW_GUIDE.md)에 정리합니다. 이 문서는
 관리자용 자동화·권한·복구 기준을 설명합니다.
 
-최종 검토일: 2026-09-08
+최종 검토일: 2026-09-27
 
 ## 적용 상태
 
@@ -56,7 +56,8 @@ GitHub 자동 링크 댓글과 상태 레이블, 저장소별 Slack Source/Targe
   연결합니다.
 - Jira-first 업무는 이미 있는 Jira Task 키를 branch, commit, PR에 직접 사용하고
   중복 생성을 막기 위해 GitHub Task Form을 다시 열지 않습니다.
-- PR merge를 기준으로 GitHub Issue와 Jira Task를 완료 처리합니다.
+- 담당 저장소의 작업 PR이 `development`에 병합되면 연결된 GitHub Issue와
+  제목의 Jira 키가 일치하는 Task를 완료 처리합니다.
 - 동일 정보를 양쪽에서 독립적으로 수정하지 않아 상태 충돌을 방지합니다.
 
 ## 권장 계층
@@ -296,8 +297,16 @@ To Do -> In Progress -> In Review -> Done
 ```text
 Pull request merged
 -> JQL: issuetype != Epic
+-> {{pullRequest.destinationBranch}} = development
+-> {{pullRequest.url}} 정규식 전체 일치:
+   ^https://github[.]com/DodamDodam-Capstone/(frontend|backend|ai|integration)/pull/[0-9]+$
+-> {{pullRequest.title.match("(SCRUM-[0-9]+)")}} = {{issue.key}}
 -> 연결된 Jira 업무 항목을 완료로 전환
 ```
+
+PR 본문이나 commit에 다른 Jira 키가 들어가 연결되더라도 제목의 키가 해당
+Task와 다르면 완료하지 않습니다. `development` → `main` 승격 PR과
+integration 컴포넌트 갱신 PR은 팀 Task 완료 조건이 아닙니다.
 
 실제 [integration #24](https://github.com/DodamDodam-Capstone/integration/pull/24)
 병합으로 GitHub `integration#19`가 닫히고 Jira `SCRUM-5`가 `완료`로 전환되는
@@ -344,13 +353,17 @@ PR merge to development
 
 - `pull_request_target`의 `closed` event 사용
 - `merged == true` 확인
-- target이 `development`이거나 source가 `development`인 `main` 승격인지 확인
-- 최소 권한인 `issues: write`, `pull-requests: read`만 사용
+- target이 `development`인지 확인
+- 최소 권한인 `contents: read`, `issues: write`만 사용
 - PR code checkout 및 실행 금지
 - PR 템플릿의 HTML 주석과 code block 안에 있는 `Resolves #123` 예시는 무시
 - 연결 번호가 GitHub Pull Request이면 닫지 않고, 열린 같은 저장소 Issue만 완료
 - 검증한 중앙 helper를 변경 불가능한 commit SHA로 checkout
 - Dependabot, Integration Bot, release PR 제외
+
+이 workflow는 네 저장소 모두 `development` 대상 병합에서만 Issue를 닫습니다.
+GitHub 기본 동작은 `main` 병합 시 종료 키워드로 Issue를 닫을 수 있으므로,
+승격 PR 본문에는 `Resolves #번호`, `Closes #번호`, `Fixes #번호`를 적지 않습니다.
 
 ## Release Epic 연결
 
@@ -410,9 +423,9 @@ Team Board Gantt는 Jira의 상위 항목 관계를 읽어 Epic과 Task를 자�
 `1.1`~`1.4`로 표시되었습니다.
 
 업무가 완료될 때 Jira Automation은 삭제 작업을 실행하지 않고 상태만 `완료`로
-전환합니다. 2026-08-22 감사에서 흐름 구성이 `Pull request merged` →
-`issuetype != Epic` → `업무 항목을 완료로 전환`뿐임을 확인했고, 최근 감사 로그도
-성공 또는 적용 대상 없음으로 기록되어 있었습니다.
+전환합니다. 2026-08-22 감사 당시에는 `Pull request merged` →
+`issuetype != Epic` → `업무 항목을 완료로 전환`만 적용되어 있었습니다.
+2026-09-27에 대상 브랜치·저장소·PR 제목의 Jira 키 조건을 추가했습니다.
 
 완료 업무가 사라져 보였던 원인은 Team Board Gantt의 `View Settings`에서
 `Show completed tickets`가 꺼져 있었기 때문입니다. 이 옵션을 활성화하고 새로
