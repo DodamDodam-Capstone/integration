@@ -365,6 +365,10 @@ PR merge to development
 GitHub 기본 동작은 `main` 병합 시 종료 키워드로 Issue를 닫을 수 있으므로,
 승격 PR 본문에는 `Resolves #번호`, `Closes #번호`, `Fixes #번호`를 적지 않습니다.
 
+`pull_request_target` workflow 변경은 각 저장소의 기본 브랜치 `main`에
+반영된 뒤 실행에 적용됩니다. `development`에 PR을 병합한 뒤 다음 승격에서
+`main`의 `close-linked-issues.yml`도 확인합니다.
+
 ## Release Epic 연결
 
 `development` → `main` 승격 PR에는 sprint 또는 release Epic key를 사용합니다.
