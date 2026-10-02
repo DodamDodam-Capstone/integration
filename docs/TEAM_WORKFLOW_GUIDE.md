@@ -185,6 +185,8 @@ PR:     👷 ci(compose): SCRUM-204 [INT] 인증 서비스 통합 검사 추가
    merge commit으로 병합합니다.
 8. `main` 대상 PR은 `development`에서만 생성하며 hotfix도 먼저
    `development`에 반영합니다.
+9. `main` 승격 PR에는 `Resolves #번호`, `Closes #번호`, `Fixes #번호`를
+   적지 않습니다. GitHub는 기본 브랜치 병합 시 이 키워드로 Issue를 닫습니다.
 
 Integration Bot PR이 여러 개 열리면 merge queue가 최신 `development`와의
 조합을 하나씩 다시 검사합니다. Bot branch를 직접 합치거나 lock 파일을 다른
@@ -199,7 +201,7 @@ Integration Bot PR이 여러 개 열리면 merge queue가 최신 `development`�
 | 대상 | 완료 시점 | 자동/수동 |
 | --- | --- | --- |
 | GitHub Task Issue | 연결된 PR이 `development`에 merge | 자동 |
-| Jira Task/Bug | Jira 키가 연결된 PR이 merge | 자동 |
+| Jira Task/Bug | 담당 저장소의 `development` 대상 PR이 merge하고 제목의 Jira 키가 해당 업무와 일치 | 자동 |
 | Jira Epic | 모든 child Task와 integration 검증 완료 | sprint review에서 수동 |
 | GitHub Epic Issue | 모든 sub-issue 완료 확인 | sprint review에서 수동 |
 
@@ -213,6 +215,7 @@ Jira Task가 완료되면 삭제하지 않습니다. Team Board에서 보이지 
 - 다른 저장소 Issue 번호를 `Resolves #번호`로 적지 않습니다.
 - branch와 PR에 서로 다른 Jira 키를 넣지 않습니다.
 - PR merge 전에 Jira Task를 수동으로 완료하지 않습니다.
+- 통합·승격 PR 본문에서 언급한 팀 Jira 키만으로 Task를 완료하지 않습니다.
 - commit에 `#done` Smart Commit을 사용하지 않습니다.
 - `main`과 `development`에 직접 push하지 않습니다.
 - Epic은 첫 번째 child Task가 끝났다고 완료하지 않습니다.
